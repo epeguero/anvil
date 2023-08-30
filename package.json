@@ -9,17 +9,31 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@babel/cli": "^7.22.10",
+    "@babel/core": "^7.22.11",
+    "@babel/generator": "^7.22.10",
+    "@babel/parser": "^7.22.11",
+    "@babel/preset-env": "^7.22.10",
+    "@babel/preset-modules": "^0.1.6",
+    "@babel/preset-typescript": "^7.22.11",
     "@types/node": "20.5.6",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
+    "@types/typescript": "^2.0.0",
+    "ace-builds": "^1.24.1",
     "autoprefixer": "10.4.15",
     "eslint": "8.48.0",
     "eslint-config-next": "13.4.19",
+    "fs": "^0.0.1-security",
     "next": "13.4.19",
     "postcss": "8.4.28",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-jsx-parser": "^1.29.0",
     "tailwindcss": "3.3.3",
-    "typescript": "5.2.2"
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.22.5"
   }
 }

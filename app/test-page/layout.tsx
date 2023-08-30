@@ -1,4 +1,5 @@
-import './globals.css'
+// import '../globals.css'
+import {JSX} from 'react';
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
@@ -10,13 +11,18 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
-  children,
+  children
 }: {
   children: React.ReactNode
-}) {
+}): JSX.Element {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body 
+        className={inter.className} 
+        style={{ margin: 0 }}
+      >
+        {children}
+      </body>
     </html>
   )
 }
