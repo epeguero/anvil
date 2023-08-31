@@ -2,12 +2,59 @@
 
 import React, {JSX, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import JsxParser from 'react-jsx-parser'
+
+import * as ts from "typescript";
+// import JsxParser from 'react-jsx-parser'
+
 import * as Ace from "ace-builds";
 import "ace-builds/src-noconflict/theme-mono_industrial";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/mode-jsx";
 import "ace-builds/src-noconflict/keybinding-vim";
+
+export default function Home() : JSX.Element {
+  const [sourceCode, setSourceCode] = useState<string>(
+`export default function() {
+  return (
+      <div>Hello World!</div>
+  )
+}`
+  );
+  
+  return (
+    <>
+      <div  style={{
+              display: "flex", flexDirection: "column", 
+              width: '100vw', height: '100vh'
+            }}
+      >
+
+        <div  style={{
+                background: 
+                  `repeating-linear-gradient(
+                      135deg,
+                      #606dbc,
+                      #606dbc 10px,
+                      #465298 10px,
+                      #465298 20px
+                    );`, 
+                borderRadius: '15px',
+                padding: '1em',
+                flex: '1 0 0'
+              }}
+        >
+          <CustomComponent source={sourceCode} />
+        </div>
+
+        <div  style= {{ flex: '1 0 0' }}
+        >
+          <CodeEditor initialCode={sourceCode} onCodeChange={setSourceCode}/>
+        </div>
+
+      </div>
+    </>
+  );
+}
 
 function CodeEditor({
     onCodeChange,
@@ -42,175 +89,128 @@ function CodeEditor({
         }
     }, []);
 
+    editor.current?.resize();
+
     return (
-      <div
-          style= {{ 
-            // width: "100%", height: "100%",
-            minWidth: "50%", minHeight: "50%",
-          }}
-          ref={editorHost}
+      <div style = {{ minWidth: "100%", minHeight: "100%" }}
+           ref={editorHost}
       />
     );
 }
 
-const Sandbox = ({ 
-    userCode
+const CustomComponent = ({ 
+    source
   } : {
-    userCode: string
+    source: string
   }) => {
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  // const iframeRef = React.useRef<HTMLIFrameElement>(null);
 
-  React.useEffect(() => {
-    const iframeDocument = iframeRef.current?.contentDocument;
-    if (iframeDocument) {
-      iframeDocument.body.innerHTML = '';
-      const div = iframeDocument.createElement('div');
-      iframeDocument.body.appendChild(div);
+  // React.useEffect(() => {
+  //   const iframeDocument = iframeRef.current?.contentDocument;
+  //   if (iframeDocument) {
+  //     iframeDocument.body.innerHTML = '';
+  //     const div = iframeDocument.createElement('div');
+  //     iframeDocument.body.appendChild(div);
 
-      const iframeReactRoot = createRoot(div); // Use this if userCode is JSX
-      iframeReactRoot.render(
-        <JsxParser
-          jsx={userCode}
-          onError={(error) => {
-            iframeDocument.body.innerText = `Error: ${error}`;
-          }}
-        />
-      );
+  //     const iframeReactRoot = createRoot(div); // Use this if userCode is JSX
+  //     iframeReactRoot.render(
+  //       <div onClick={() => console.log("clicked iframe")}>
+  //       <JsxParser
+  //         jsx={userCode}
+  //         onError={(error) => {
+  //           iframeDocument.body.innerText = `Error: ${error}`;
+  //         }}
+  //       />
+  //       </div>
+  //     );
+  //   }
+  // }, [userCode]);
+
+  // return (
+  //   <iframe 
+  //     title="sandbox" 
+  //     ref={iframeRef} 
+  //     style={{ border: 'none', margin: 0, padding: 0, width: '100%', height: '100%' }}
+  //   />
+  // );
+  // const compilerOptions = {
+  //   target: ts.ScriptTarget.Latest,
+  //   module: ts.ModuleKind.CommonJS,
+  //   jsx: ts.JsxEmit.React,
+  // };
+
+  // const host = ts.createCompilerHost(compilerOptions);
+  const sourceFile = ts.createSourceFile("Custom.tsx", source, ts.ScriptTarget.Latest);
+  // const program = ts.createProgram([sourceFile.fileName], compilerOptions);
+  // const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile, undefined);
+
+  const transpiled = ts.transpileModule(source, {
+      compilerOptions: {
+        target: ts.ScriptTarget.Latest,
+        module: ts.ModuleKind.CommonJS,
+        jsx: ts.JsxEmit.React
+      },
+      reportDiagnostics: true
     }
-  }, [userCode]);
-
-  return (
-    <iframe 
-      title="sandbox" 
-      ref={iframeRef} 
-      style={{ border: 'none', margin: 0, padding: 0, width: '100%', height: '100%' }}
-    />
   );
+
+  console.log(transpiled);
+
+  if(!transpiled.diagnostics?.length) {
+    // console.log(eval(transpiled.outputText));
+    const x = 1;
+    // eval('x = 2');
+    console.log(x);
+  }
+  // const blob = new Blob(
+  //   [transpiled.outputText], 
+  //   { type: "application/javascript" }
+  // );
+
+  // const blobUrl = URL.createObjectURL(blob);
+
+  // import(blobUrl)
+  //   .then((module) => console.log(module))
+  //   .catch(console.log)
+
+  // console.log(blob, blobUrl);
+
+
+  return transpiled.diagnostics?.length
+  ? (
+    <div>
+      Compilation Errors
+      <div>
+        {
+          transpiled.diagnostics?.map((d, ix) => {
+            const lineAndChar = sourceFile.getLineAndCharacterOfPosition(d.start ?? 0);
+            const line = lineAndChar.line + 1;
+            const charPos = lineAndChar.character;
+            return (
+              <div key={`diag${ix}`}>{
+                `Line ${line}, Position ${charPos}: ${d.messageText as string}`
+              }</div>
+            )
+          })
+        }
+      </div>
+    </div>
+  )
+  : (
+    <div>
+      Compiled Code
+      <div>
+        {transpiled.outputText}
+        {/* {new Function("f", "React.createElement('div', null, 'HelloWorld!')")()} */}
+        {/* {eval(transpiled.outputText)} */}
+        {/* {eval("React.createElement('div', null, 'HelloWorld!')")} */}
+        {/* {React.createElement('div', null, 'HelloWorld!')} */}
+        {/* <script>
+          React.createElement('div', null, 'HelloWorld!')
+        </script> */}
+      </div>
+    </div>
+  );
+  // return ( <JsxParser jsx={source} /> );
 };
 
-
-export default function Home() : JSX.Element {
-  const [code, setCode] = useState<string>('<div>hello, world!</div>');
-  
-  return (
-    <>
-      <div style={{display: "flex", flexDirection: "column", width: '100vw', height: '100vh'}}>
-        <Sandbox userCode={code} />
-        <CodeEditor initialCode={code} onCodeChange={setCode}/>
-      </div>
-    </>
-  );
-}
-
-// import Image from 'next/image'
-// export default function Home() {
-//   return (
-//     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-//       <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-//         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-//           Get started by editing&nbsp;
-//           <code className="font-mono font-bold">app/page.tsx</code>
-//         </p>
-//         <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-//           <a
-//             className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-//             href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             By{' '}
-//             <Image
-//               src="/vercel.svg"
-//               alt="Vercel Logo"
-//               className="dark:invert"
-//               width={100}
-//               height={24}
-//               priority
-//             />
-//           </a>
-//         </div>
-//       </div>
-
-//       <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-//         <Image
-//           className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-//           src="/next.svg"
-//           alt="Next.js Logo"
-//           width={180}
-//           height={37}
-//           priority
-//         />
-//       </div>
-
-//       <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-//         <a
-//           href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-//           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <h2 className={`mb-3 text-2xl font-semibold`}>
-//             Docs{' '}
-//             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-//               -&gt;
-//             </span>
-//           </h2>
-//           <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-//             Find in-depth information about Next.js features and API.
-//           </p>
-//         </a>
-
-//         <a
-//           href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <h2 className={`mb-3 text-2xl font-semibold`}>
-//             Learn{' '}
-//             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-//               -&gt;
-//             </span>
-//           </h2>
-//           <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-//             Learn about Next.js in an interactive course with&nbsp;quizzes!
-//           </p>
-//         </a>
-
-//         <a
-//           href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-//           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <h2 className={`mb-3 text-2xl font-semibold`}>
-//             Templates{' '}
-//             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-//               -&gt;
-//             </span>
-//           </h2>
-//           <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-//             Explore the Next.js 13 playground.
-//           </p>
-//         </a>
-
-//         <a
-//           href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-//           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <h2 className={`mb-3 text-2xl font-semibold`}>
-//             Deploy{' '}
-//             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-//               -&gt;
-//             </span>
-//           </h2>
-//           <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-//             Instantly deploy your Next.js site to a shareable URL with Vercel.
-//           </p>
-//         </a>
-//       </div>
-//     </main>
-//   )
-// }
