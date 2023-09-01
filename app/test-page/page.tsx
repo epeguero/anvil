@@ -4,7 +4,6 @@ import React, {JSX, useEffect, useState} from 'react';
 
 import loadable, { LoadableClassComponent } from '@loadable/component';
 import * as ts from "typescript";
-// import JsxParser from 'react-jsx-parser'
 
 import * as Ace from "ace-builds";
 import "ace-builds/src-noconflict/theme-mono_industrial";
@@ -14,16 +13,9 @@ import "ace-builds/src-noconflict/keybinding-vim";
 
 export default function Home() : JSX.Element {
   const [sourceCode, setSourceCode] = useState<string>(
-// `
-// import React from 'react';
-
-// export default function() {
-//   return (
-//       <div>Hello World!</div>
-//   )
-// }`
 `
-const React = await import('https://cdn.jsdelivr.net/npm/@esm-bundle/react/esm/react.development.min.js');
+import React from 'react';
+
 export default function() {
   return (
       <div>Hello World!</div>
@@ -38,30 +30,6 @@ export default function() {
               width: '100vw', height: '100vh'
             }}
       >
-
-        {/* <script type='importmap'>
-          {
-          ` {
-              "imports": {
-                "react": "../../node_modules/react"
-              }
-            }
-          `
-          }
-        </script> */}
-        {/* <script src="https://unpkg.com/systemjs@6.3.2/dist/system.js"></script>
-        <script type="systemjs-importmap">
-          {`
-              {
-                // for each library you add u have to include it here
-                // documentation is here [systemjs import maps][3]d
-                "imports": {
-                  "react": "https://unpkg.com/react@16/umd/react.production.min.js",
-                  "react-dom": "https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"
-                }
-              }
-          `}
-        </script> */}
         <div  style={{
                 background: 
                   `repeating-linear-gradient(
@@ -95,9 +63,7 @@ const CustomComponent = ({
   source: string
 }) => {
   const [diagnostics, setDiagnostics] = useState<ts.Diagnostic[] | undefined>(undefined);
-  const [outputCode, setOutputCode] = useState("");
   const [DynamicComponent, setDynamicComponent] = useState<LoadableClassComponent<any>>(null);
-  const [module, setModule] = useState<any>(null);
   
   useEffect(() => {
     const transpiled = ts.transpileModule(source, {
@@ -109,7 +75,6 @@ const CustomComponent = ({
         reportDiagnostics: true
       }
     );
-    setOutputCode(transpiled.outputText);
 
     console.log(transpiled);
     setDiagnostics(transpiled.diagnostics);
@@ -143,38 +108,28 @@ const CustomComponent = ({
     }
   }, [source]);
 
-  console.log(DynamicComponent);
-  console.log(module);
-  console.log(outputCode);
   return (
     <div>
       <div>
-        <script>
-          {
-          ` {
-              "imports": {
-                "react": "https://cdn.jsdelivr.net/npm/@esm-bundle/react/esm/react.development.min.js"
-              }
-            }
-          `
-          }
-        </script>
-        { DynamicComponent
+        <>
+          {(() => {
+            const importMap = {
+              imports: {
+                react: "https://cdn.jsdelivr.net/npm/@esm-bundle/react/esm/react.development.min.js"
+              },
+            };
+
+            const im = document.createElement('script');
+            im.type = 'importmap';
+            im.textContent = JSON.stringify(importMap);
+            document.head.appendChild(im);
+          })()
+        }
+        </>
+        
+        { !diagnostics?.length && DynamicComponent
         ? ( 
-            <div>
-              Compiled Code<br/>
-              {/* {DynamicComponent.render(null, React)} */}
-              {/* {DynamicComponent.render({ref: {'react': React}})} */}
-              <DynamicComponent/>
-              {/* {module.default()} */}
-              {/* {new Function("f", "React.createElement('div', null, 'HelloWorld!')")()} */}
-              {outputCode}
-              {/* {eval("React.createElement('div', null, 'HelloWorld!')")} */}
-              {/* {React.createElement('div', null, 'HelloWorld!')} */}
-              {/* <script>
-                React.createElement('div', null, 'HelloWorld!')
-              </script> */}
-            </div>
+            <DynamicComponent/>
           )
         : (
             <div>
