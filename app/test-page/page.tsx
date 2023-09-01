@@ -30,20 +30,7 @@ export default function() {
               width: '100vw', height: '100vh'
             }}
       >
-        <div  style={{
-                background: 
-                  `repeating-linear-gradient(
-                      135deg,
-                      #606dbc,
-                      #606dbc 10px,
-                      #465298 10px,
-                      #465298 20px
-                    )`, 
-                borderRadius: '15px',
-                padding: '1em',
-                flex: '1 0 0'
-              }}
-        >
+        <div  style={{ flex: '1 0 0' }} >
           <CustomComponent source={sourceCode} />
         </div>
 
@@ -109,51 +96,62 @@ const CustomComponent = ({
   }, [source]);
 
   return (
-    <div>
-      <div>
+    <div style={{display:'flex', flexDirection: 'column', height: '100%'}}>
+      <div style={{
+                background: 
+                  `repeating-linear-gradient(
+                      135deg,
+                      #606dbc,
+                      #606dbc 10px,
+                      #465298 10px,
+                      #465298 20px
+                    )`, 
+                borderRadius: '15px',
+                padding: '1em',
+                flex: '2 1 0'
+              }}>
         <>
           {(() => {
-            const importMap = {
-              imports: {
-                react: "https://cdn.jsdelivr.net/npm/@esm-bundle/react/esm/react.development.min.js"
-              },
-            };
+              const importMap = {
+                imports: {
+                  react: "https://cdn.jsdelivr.net/npm/@esm-bundle/react/esm/react.development.min.js"
+                },
+              };
 
-            const im = document.createElement('script');
-            im.type = 'importmap';
-            im.textContent = JSON.stringify(importMap);
-            document.head.appendChild(im);
-          })()
-        }
+              const im = document.createElement('script');
+              im.type = 'importmap';
+              im.textContent = JSON.stringify(importMap);
+              document.head.appendChild(im);
+            })()
+          }
         </>
         
         { !diagnostics?.length && DynamicComponent
         ? ( 
             <DynamicComponent/>
           )
-        : (
-            <div>
-              Compilation Errors
-              { (() => {
-                  const sourceFile = ts.createSourceFile("Custom.tsx", source, ts.ScriptTarget.Latest);
-                  return diagnostics?.map((d, ix) => {
-                    const lineAndChar = sourceFile.getLineAndCharacterOfPosition(d.start ?? 0);
-                    const line = lineAndChar.line + 1;
-                    const charPos = lineAndChar.character;
-                    return (
-                      <div key={`diag${ix}`}>{
-                        `Line ${line}, Position ${charPos}: ${d.messageText as string}`
-                      }</div>
-                    )
-                  }
-                )})()
-              }
-            </div>
-          )}
+        : null
+        }
+      </div>
+      <div style={{display: 'flex', flex: '1 1 0', flexDirection: 'column' }}>
+        Compilation Errors
+        { (() => {
+            const sourceFile = ts.createSourceFile("Custom.tsx", source, ts.ScriptTarget.Latest);
+            return diagnostics?.map((d, ix) => {
+              const lineAndChar = sourceFile.getLineAndCharacterOfPosition(d.start ?? 0);
+              const line = lineAndChar.line + 1;
+              const charPos = lineAndChar.character;
+              return (
+                <div key={`diag${ix}`}>{
+                  `Line ${line}, Position ${charPos}: ${d.messageText as string}`
+                }</div>
+              )
+            }
+          )})()
+        }
       </div>
     </div>
   );
-  // return ( <JsxParser jsx={source} /> );
 };
 
 function CodeEditor({

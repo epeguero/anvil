@@ -20,7 +20,7 @@ export default function RootLayout({
       <body 
         id={'root'}
         className={inter.className} 
-        style={{ margin: 0, backgroundColor: 'black' }}
+        style={{ margin: 0 }}
       >
         {children}
       </body>
