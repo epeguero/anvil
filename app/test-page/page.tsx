@@ -164,7 +164,8 @@ const CustomComponent = ({
             <div>
               Compiled Code<br/>
               {/* {DynamicComponent.render(null, React)} */}
-              {DynamicComponent.render({ref: {'react': React}})}
+              {/* {DynamicComponent.render({ref: {'react': React}})} */}
+              <DynamicComponent/>
               {/* {module.default()} */}
               {/* {new Function("f", "React.createElement('div', null, 'HelloWorld!')")()} */}
               {outputCode}
