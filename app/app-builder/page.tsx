@@ -1,8 +1,18 @@
 'use client'
 
-import React, {JSX, useEffect, useState} from 'react';
+import React, {JSX, useEffect, useState, lazy, LazyExoticComponent, Suspense} from 'react';
+// import ReactDefault, * as ReactNamed from 'react';
+// console.log(ReactDefault);
+// console.log(ReactNamed);
+// import npm from 'npm';
+// const React = require('react');
+// const useState = React.useState;
+// const useEffect = React.useEffect;
 
-import loadable, { LoadableClassComponent } from '@loadable/component';
+// import * as browserify from 'browserify';
+// browserify.require('react');
+
+// import loadable, { LoadableClassComponent } from '@loadable/component';
 import * as ts from "typescript";
 
 import * as Ace from "ace-builds";
@@ -14,13 +24,21 @@ import "ace-builds/src-noconflict/keybinding-vim";
 export default function Home() : JSX.Element {
   const [sourceCode, setSourceCode] = useState<string>(
 `
-import React from 'react';
-
 export default function() {
-  return (
-      <div>Hello World!</div>
-  )
+  return (42)
 }`
+// `
+// import React, {useState} from 'react';
+
+// export default function() {
+//   const [n, setN] = useState(0);
+//   return (
+//     <>
+//       <button onClick={() => setN(n+1)}>Increment</button>
+//       <div>{n}</div>
+//     </>
+//   )
+// }`
   );
 
   return (
@@ -50,8 +68,79 @@ const CustomComponent = ({
   source: string
 }) => {
   const [diagnostics, setDiagnostics] = useState<ts.Diagnostic[] | undefined>(undefined);
-  const [DynamicComponent, setDynamicComponent] = useState<LoadableClassComponent<any>>(null);
+  // const [DynamicComponent, setDynamicComponent] = useState<LoadableClassComponent<any> | null>(null);
+  const [DynamicComponent, setDynamicComponent] = useState<LazyExoticComponent<any> | null>(null);
+  const [importMapInstalled, setImportMapInstalled] = useState<boolean>(false);
   
+  useEffect(() => {
+      (() => {
+        if(!importMapInstalled) {
+          // add import map
+          window.React = React;
+          const namedExports = Object.keys(React).map(key => 
+            `${key} = React.${key}`
+          ).join(', ');
+          console.log(namedExports);
+
+          const im = document.createElement('script');
+          im.textContent = JSON.stringify({
+            imports: {
+              'react': 'data:application/javascript;charset=utf-8,' + encodeURIComponent(
+                ` 
+                  const React = window.React;
+                  export default React;
+                  export const ${namedExports};
+                `
+              ),
+            }
+          });
+          im.type = 'importmap';
+          document.head.appendChild(im);
+
+          const transpile = (code: string): string => 
+            ts.transpileModule(code, {
+                compilerOptions: {
+                  target: ts.ScriptTarget.Latest,
+                  module: ts.ModuleKind.ESNext,
+                  jsx: ts.JsxEmit.React
+                },
+                reportDiagnostics: true
+              }
+            ).outputText;
+
+          const code = transpile(`
+              import React, {useState} from 'react';
+              export default function F() {
+                const [n, setN] = useState(0);
+                return <>
+                  <button onClick={() => setN(n+1)}>Increment</button>
+                  <br/>
+                  {n}
+                </>;
+              }
+            `);
+
+          // add module script
+          const blob = new Blob(
+            [code], 
+            { type: "application/javascript" }
+          );
+
+          const blobUrl = URL.createObjectURL(blob);
+
+          ( async() => {
+            setDynamicComponent( () => 
+              React.lazy(() => {
+                return import(/* webpackIgnore: true */ blobUrl).then(m => {console.log(m); return m})
+              })
+            )
+          })()
+
+          setImportMapInstalled(true);
+        }
+      })()
+  })
+
   useEffect(() => {
     const transpiled = ts.transpileModule(source, {
         compilerOptions: {
@@ -63,7 +152,7 @@ const CustomComponent = ({
       }
     );
 
-    console.log(transpiled);
+    console.log(transpiled.outputText);
     setDiagnostics(transpiled.diagnostics);
 
     if(!transpiled.diagnostics?.length) {
@@ -77,15 +166,15 @@ const CustomComponent = ({
       (
         async () => {
           try {
-            setDynamicComponent( () =>
-              loadable(() => {
-                return import(/* webpackIgnore: true */ blobUrl)
-                .then((module) => {
-                  console.log(module.default); 
-                  return module.default;
-                })
-              }
-            ))
+            // setDynamicComponent( () =>
+            //   loadable(() => {
+            //     return import(/* webpackIgnore: true */ blobUrl)
+            //     .then((module) => {
+            //       console.log(module.default); 
+            //       return module.default;
+            //     })
+            //   }
+            // ))
           } catch (error) {
             console.log(error);
           }
@@ -95,6 +184,7 @@ const CustomComponent = ({
     }
   }, [source]);
 
+  console.log(DynamicComponent);
   return (
     <div style={{display:'flex', flexDirection: 'column', height: '100%'}}>
       <div style={{
@@ -110,26 +200,21 @@ const CustomComponent = ({
                 padding: '1em',
                 flex: '2 1 0'
               }}>
-        <>
-          {(() => {
-              const importMap = {
-                imports: {
-                  react: "https://cdn.jsdelivr.net/npm/@esm-bundle/react/esm/react.development.min.js"
-                },
-              };
-
-              const im = document.createElement('script');
-              im.type = 'importmap';
-              im.textContent = JSON.stringify(importMap);
-              document.head.appendChild(im);
-            })()
-          }
-        </>
         
         { !diagnostics?.length && DynamicComponent
-        ? ( 
+        ? 
+          // (function () {
+          //   const m = document.createElement('script');
+          //   // m.type = 'module-shim';
+          //   // m.textContent = `
+          //   //   import DynamicReact from 'react';
+          //   //   console.log(DynamicReact === React);
+          //   // `;
+          //   document.head.appendChild(m);
+          // })()
+          <Suspense fallback={<div>Loading...</div>}>
             <DynamicComponent/>
-          )
+          </Suspense>
         : null
         }
       </div>
@@ -185,7 +270,7 @@ function CodeEditor({
             editor.current.setValue(initialCode ?? "", -1);
             editor.current.clearSelection();
         }
-    }, []);
+    });
 
     editor.current?.resize();
 

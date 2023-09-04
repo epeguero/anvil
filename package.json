@@ -17,6 +17,7 @@
     "@babel/preset-modules": "^0.1.6",
     "@babel/preset-typescript": "^7.22.11",
     "@loadable/component": "^5.15.3",
+    "@node-loader/import-maps": "^1.1.0",
     "@types/loadable__component": "^5.13.5",
     "@types/node": "20.5.6",
     "@types/react": "18.2.21",
@@ -24,20 +25,26 @@
     "@types/typescript": "^2.0.0",
     "ace-builds": "^1.24.1",
     "autoprefixer": "10.4.15",
+    "browserify": "^17.0.0",
+    "browserify-fs": "^1.0.0",
+    "es-module-shims": "^1.8.0",
     "eslint": "8.48.0",
     "eslint-config-next": "13.4.19",
     "fs": "^0.0.1-security",
     "module-from-string": "^3.3.0",
     "next": "13.4.19",
+    "npm": "^10.0.0",
     "postcss": "8.4.28",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-helmet": "^6.1.0",
     "react-jsx-parser": "^1.29.0",
     "systemjs": "^6.14.2",
     "tailwindcss": "3.3.3",
     "typescript": "^5.2.2"
   },
   "devDependencies": {
-    "@babel/preset-react": "^7.22.5"
+    "@babel/preset-react": "^7.22.5",
+    "webpack-cli": "^5.1.4"
   }
 }
