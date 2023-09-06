@@ -17,8 +17,24 @@ async function content(path) {
 }
 
 (async () => {
-  const sourceCode = await content('./app/page.tsx');
-  const ast = parse(sourceCode, {plugins: ['jsx']});
-  const emittedCode = generate(ast);
+  // const sourceCode = await content('./app/page.tsx');
+  const sourceCode = `
+    import React, {useState} from 'react';
+
+    export default function() {
+      const [n, setN] = useState<(0);
+      return (
+        <>
+          <button onClick={() => setN(n+1)}>Increment</button>
+          <div>{n}</div>
+        </>
+      )
+    }
+  `;
+  const parseResult = parse(sourceCode, {
+    plugins: ['jsx', 'typescript']}
+  );
+  console.log(parseResult);
+  const emittedCode = generate(parseResult);
   console.log(emittedCode);
 })();
