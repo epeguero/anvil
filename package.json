@@ -16,6 +16,7 @@
     "@babel/preset-env": "^7.22.10",
     "@babel/preset-modules": "^0.1.6",
     "@babel/preset-typescript": "^7.22.11",
+    "@codemirror/view": "^6.18.0",
     "@codesandbox/sandpack-client": "^2.6.9",
     "@codesandbox/sandpack-react": "^2.6.9",
     "@loadable/component": "^5.15.3",
