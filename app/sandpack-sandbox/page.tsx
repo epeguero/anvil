@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { MutableRefObject, Ref, useEffect, useState } from 'react';
 import * as ts from "typescript";
+import {CodeEditorRef, useSandpack} from "@codesandbox/sandpack-react"
 import EditorSidebar from '@/components/EditorSidebar';
 import ElementDrawer from '@/components/ElementDrawer';
 import ElementEditor from '@/components/ElementEditor';
+import { MixIcon } from '@radix-ui/react-icons';
+import { SandpackFile } from '@codesandbox/sandpack-react';
 
 function printAst(ast: ts.Node) {
   return ts.createPrinter().printNode(
@@ -81,26 +84,55 @@ function tsx(name: string, children: string[] = [], externalDeps: ts.ImportDecla
 
 export default function Home() {
   const [userFiles, setUserFiles] = useState<{[key: string]: SandpackFile}>({});
+  // let codeMirrorInstance = React.useRef<CodeEditorRef>();
+
+  // useEffect(() => {
+  //   console.log("cm ref effect");
+  //   const cm = codeMirrorInstance.current;
+  //   if(cm) codeMirrorInstance.current = cm;
+  // }, [codeMirrorInstance]
+  // );
+  
   useEffect(() => {
-    console.log("useEFfect");
+    console.log("useEffect");
     // window.onstorage = (event) => {
     //   console.log(event);
-    //   if(event.key && event.newValue) {
-    //     setUserFiles((uf) => ({
-    //       ...uf, 
-    //       [`${event.key}`]: {code: event.newValue as string}
-    //     }))
-    //   }
+    //   // if(event.key && event.newValue) {
+    //   //   setUserFiles((uf) => ({
+    //   //     ...uf, 
+    //   //     [`${event.key}`]: {code: event.newValue as string}
+    //   //   }))
+    //   // }
     // }
-    window.localStorage.setItem('MyComponent', printAst(tsx('MyComponent', ['A', 'B'])));
-    window.localStorage.setItem('A', printAst(tsx('A')));
-    window.localStorage.setItem('B', printAst(tsx('B')));
+    window.localStorage.setItem('/package.json', 
+      JSON.stringify(
+        {
+          main: "index.js",
+          dependencies: { 
+            'react': "latest",
+            'react-dom': "latest"
+          },
+        }
+      )
+    );
+
+    window.localStorage.setItem('/index.js', 
+`import ReactDOM from 'react-dom/client';
+import MyComponent from './MyComponent.tsx';
+ReactDOM
+  .createRoot(document.getElementById('root'))
+  .render(<MyComponent/>);
+` 
+    )
+    window.localStorage.setItem('/components/MyComponent.tsx', printAst(tsx('MyComponent', ['A', 'B'])));
+    window.localStorage.setItem('/components/A.tsx', printAst(tsx('A')));
+    window.localStorage.setItem('/components/B.tsx', printAst(tsx('B')));
     setUserFiles((uf) =>
-      ["MyComponent", "A", "B"]
+      ["/components/MyComponent.tsx", "/components/A.tsx", "/components/B.tsx", "/package.json", "/index.js"]
       .reduce(
-        (acc: {[key: string]: {code: string}}, e: string) => {
-          const code = window.localStorage.getItem(e);
-          return code ? {...acc, [`/components/${e}.tsx`]: {code}} : acc;
+        (acc: {[key: string]: {code: string}}, file: string) => {
+          const code = window.localStorage.getItem(file);
+          return code ? {...acc, [file]: {code}} : acc;
         }, uf
       )
     )
@@ -120,17 +152,14 @@ export default function Home() {
   // }, [userFiles]);
 
   return (
-    <>
     <div className='flex flex-nowrap '>
-      <div className='flex-auto'>
-        {userFiles
-        ? <ElementEditor  activeFile={"MyComponent"} 
-                          userFiles={userFiles}/>
-        : <div>Loading...</div>}
-      </div>
-      <EditorSidebar/>
+        <div className='flex-auto'>
+            <ElementEditor userFiles={userFiles}/>
+        </div>
+        <EditorSidebar/>
+        <div className='absolute bottom-0 left-0 right-0 p-4'>
+          <ElementDrawer/>
+        </div>
     </div>
-    <ElementDrawer/>
-    </>
   )
 }

@@ -19,20 +19,20 @@ export default function ElementDetails() {
 
   return (
     <>
-    <Accordion className='p-2' type="single" collapsible>
+    <Accordion key={'accordion-props'} className='p-2' type="single" collapsible>
       <AccordionItem value="item-1">
         <AccordionTrigger>Props</AccordionTrigger>
         <AccordionContent>
           <ScrollArea>
             <div className="p-4 pt-0">
-              {props.map((prop) => (
-                <>
+              {props.map((prop, i) => (
+                <div key={`prop-${i}`}>
                   <div className="flex items-center space-x-2 pb-1">
                     <button><CrossCircledIcon/></button>
                     <Label htmlFor={prop}>{prop}</Label>
                   </div>
                   <Separator/>
-                </>
+                </div>
               ))}
               <div className="flex items-center space-x-2 pb-1">
                 <button><PlusCircledIcon/></button>
@@ -43,18 +43,16 @@ export default function ElementDetails() {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
-    <Accordion className='pl-2' type='single' collapsible>
+    <Accordion key={'accordion-hooks'} className='pl-2' type='single' collapsible>
       <AccordionItem value="item-1">
         <AccordionTrigger>Hooks</AccordionTrigger>
         <AccordionContent>
           <ScrollArea>
             <div className="p-4 pt-0">
-              {hooks.map((tag) => (
-                <>
-                  <div key={tag} className="text-sm">
-                    {tag}
-                  </div>
-                </>
+              {hooks.map((h, i) => (
+                <div key={`hook-${i}`} className="text-sm">
+                  {h}
+                </div>
               ))}
             </div>
           </ScrollArea>

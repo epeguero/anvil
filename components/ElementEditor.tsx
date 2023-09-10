@@ -1,64 +1,63 @@
-import {SandpackCodeEditor, SandpackLayout, SandpackPreview, SandpackProvider, SandpackConsumer, SandpackReactContext, SandpackContext, SandpackFile, SandpackFileExplorer} from "@codesandbox/sandpack-react";
+import {CodeEditorRef, useSandpack} from "@codesandbox/sandpack-react"
+import {SandpackCodeEditor, SandpackLayout, SandpackPreview, SandpackProvider, SandpackConsumer, SandpackContext, SandpackFileExplorer} from "@codesandbox/sandpack-react";
 import { EditorView, ViewUpdate } from "@codemirror/view"
-import { sandpackDark } from "@codesandbox/sandpack-themes";
-import ElementDrawer from "./ElementDrawer";
+import { MutableRefObject, Ref, useRef } from "react";
 
+const spinnerFiles = {
+  "/index.js" : {
+    code: 
+`import ReactDOM from 'react-dom/client';
+import { Blocks } from 'react-loader-spinner';
+ReactDOM
+  .createRoot(document.getElementById('root'))
+  .render(
+    <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+      <Blocks
+        visible={true}
+        height="80"
+        width="80"
+        ariaLabel="blocks-loading"
+        wrapperStyle={{}}
+        wrapperClass="blocks-wrapper"
+      />
+      Loading user files...
+    </div>
+  );
+` 
+
+  },
+
+  "/package.json": {
+    code: JSON.stringify(
+      {
+        main: "index.js",
+        dependencies: { 
+          'react': "latest",
+          'react-dom': "latest",
+          'react-loader-spinner': "latest"
+        },
+      }
+    )
+  },
+}
 export default function ElementEditor({
-  activeFile,
   userFiles
 }: {
-  activeFile: string,
-  userFiles: {[key: string]: {code: string }}
+  userFiles: {[key: string]: {code: string }},
 }) {
-  console.log(userFiles);
   return (
     <SandpackProvider
-      // theme={sandpackDark}
       options ={{
-        visibleFiles: [`/components/${activeFile}.tsx`, '/package.json', '/index.js']
+        // visibleFiles: [`/components/${activeFile}.tsx`, '/package.json', '/index.js']
       }}
       customSetup = {
         {
           dependencies: {
             "react": "latest"
           },
-//           entry: 
-// `import ReactDOM from 'react-dom/client';
-// import ${activeFile} from './${activeFile}.tsx';
-// ReactDOM
-//   .createRoot(document.getElementById('root'))
-//   .render(<${activeFile}/>);
-// ` 
         }
       }
-      files = {
-        { 
-          ...userFiles,
-          "/package.json": {
-            code: JSON.stringify(
-              {
-                main: "index.js",
-                dependencies: { 
-                  'react': "latest",
-                  'react-dom': "latest"
-                },
-              }
-            )
-          },
-
-          // Main file
-          "/index.js": { 
-            readOnly: true,
-            code: 
-`import ReactDOM from 'react-dom/client';
-import ${activeFile} from './components/${activeFile}.tsx';
-ReactDOM
-  .createRoot(document.getElementById('root'))
-  .render(<${activeFile}/>);
-` 
-          }
-        }
-      }
+      files = {Object.keys(userFiles).length == 0 ? spinnerFiles : userFiles}
     >
       <SandpackLayout className='flex-col justify-stretch h-screen'>
         <div className='flex-1'>
@@ -66,7 +65,6 @@ ReactDOM
                             showOpenInCodeSandbox={false}
                             showRefreshButton
                             showRestartButton
-                            actionsChildren={<ElementDrawer/>}
           />
         </div>
         <div className='flex-1 flex min-w-0'>
