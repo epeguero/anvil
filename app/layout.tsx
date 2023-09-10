@@ -1,4 +1,4 @@
-// import '../globals.css'
+import '../dist/globals.css'
 import {JSX} from 'react';
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body 
         id={'root'}
-        className={inter.className} 
+        className={inter.className + ' bg-neutral-500'} 
         style={{ margin: 0 }}
       >
         {children}
