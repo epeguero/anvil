@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {SandpackCodeEditor, SandpackLayout, SandpackPreview, SandpackProvider, SandpackConsumer, SandpackReactContext, SandpackContext, SandpackFile} from "@codesandbox/sandpack-react";
-import { EditorView, ViewUpdate } from "@codemirror/view"
 import * as ts from "typescript";
 import EditorSidebar from '@/components/EditorSidebar';
-import { sandpackDark } from "@codesandbox/sandpack-themes";
+import ElementDrawer from '@/components/ElementDrawer';
+import ElementEditor from '@/components/ElementEditor';
 
 function printAst(ast: ts.Node) {
   return ts.createPrinter().printNode(
@@ -121,100 +120,17 @@ export default function Home() {
   // }, [userFiles]);
 
   return (
-    <div className='flex flex-nowrap h-screen'>
+    <>
+    <div className='flex flex-nowrap '>
       <div className='flex-auto'>
         {userFiles
-        ? <Sandbox  activeFile={"MyComponent"} 
-                    userFiles={userFiles}/>
+        ? <ElementEditor  activeFile={"MyComponent"} 
+                          userFiles={userFiles}/>
         : <div>Loading...</div>}
       </div>
       <EditorSidebar/>
     </div>
+    <ElementDrawer/>
+    </>
   )
-}
-
-function Sandbox({
-  activeFile,
-  userFiles
-}: {
-  activeFile: string,
-  userFiles: {[key: string]: {code: string }}
-}) {
-  console.log(userFiles);
-  return (
-    <SandpackProvider
-      theme={sandpackDark}
-      options ={{
-        visibleFiles: [`/components/${activeFile}.tsx`, '/package.json', '/index.js']
-      }}
-      customSetup = {
-        {
-          dependencies: {
-            "react": "latest"
-          },
-//           entry: 
-// `import ReactDOM from 'react-dom/client';
-// import ${activeFile} from './${activeFile}.tsx';
-// ReactDOM
-//   .createRoot(document.getElementById('root'))
-//   .render(<${activeFile}/>);
-// ` 
-        }
-      }
-      files = {
-        { 
-          ...userFiles,
-          "/package.json": {
-            code: JSON.stringify(
-              {
-                main: "index.js",
-                dependencies: { 
-                  'react': "latest",
-                  'react-dom': "latest"
-                },
-              }
-            )
-          },
-
-          // Main file
-          "/index.js": { 
-            readOnly: true,
-            code: 
-`import ReactDOM from 'react-dom/client';
-import ${activeFile} from './components/${activeFile}.tsx';
-ReactDOM
-  .createRoot(document.getElementById('root'))
-  .render(<${activeFile}/>);
-` 
-          }
-        }
-      }
-    >
-      <SandpackLayout className='flex-col items-stretch h-screen'>
-        <SandpackPreview showOpenInCodeSandbox={false}/>
-        <SandpackConsumer>
-        { (ctx: SandpackContext | null) => (
-            <SandpackCodeEditor 
-              // ref={codeMirrorInstance} 
-              // initMode="immediate"
-              extensions={[
-                EditorView.updateListener.of(
-                  (update: ViewUpdate) => {
-                    // console.log(ctx);
-                  }
-                )
-              ]}
-              showLineNumbers
-              showInlineErrors
-            />
-          )
-        }
-        </SandpackConsumer>
-      </SandpackLayout>
-    </SandpackProvider>
-  )
-}
-
-function Outline() {
-  return (<div className='w-96 h-96 bg-sky-500/50'></div>)
 }
