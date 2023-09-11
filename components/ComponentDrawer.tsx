@@ -9,10 +9,15 @@ import {
 } from "@/components/ui/sheet"
 import { MixIcon } from "@radix-ui/react-icons"
 
-export default function ElementDrawer() {
+export default function ComponentDrawer() {
   return (
     <Sheet modal={false}>
-      <SheetTrigger>{<MixIcon/>}</SheetTrigger>
+      <SheetTrigger>
+        <div className='flex h-items-center gap-1 m-1 text-xs'>
+          <MixIcon/>
+          Component Drawer
+        </div>
+      </SheetTrigger>
       <SheetContent side="bottom">
         <SheetHeader>
           <SheetTitle>Component Drawer</SheetTitle>

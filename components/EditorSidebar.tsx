@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import EditorOutline from "./EditorOutline";
-import ElementDetails from "./ElementDetails";
+import ComponentDetails from "./ComponentDetails";
 import { Separator } from "@/components/ui/separator"
 
 export default function EditorSidebar() {
@@ -21,7 +21,7 @@ export default function EditorSidebar() {
       </Card>
       <Card className='h-2/3 rounded-sm'>
         <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
-        <ElementDetails/>
+        <ComponentDetails/>
       </Card>
     </div>
     // <Sidebar>

@@ -1,12 +1,8 @@
 'use client';
 
-import React, { MutableRefObject, Ref, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as ts from "typescript";
-import {CodeEditorRef, useSandpack} from "@codesandbox/sandpack-react"
-import EditorSidebar from '@/components/EditorSidebar';
-import ElementDrawer from '@/components/ElementDrawer';
-import ElementEditor from '@/components/ElementEditor';
-import { MixIcon } from '@radix-ui/react-icons';
+import { ComponentEditor } from '@/components/ComponentEditor';
 import { SandpackFile } from '@codesandbox/sandpack-react';
 
 function printAst(ast: ts.Node) {
@@ -82,28 +78,49 @@ function tsx(name: string, children: string[] = [], externalDeps: ts.ImportDecla
   return tsx;
 }
 
+const spinnerFiles = {
+  "/index.js" : {
+    code: 
+`import ReactDOM from 'react-dom/client';
+import { Blocks } from 'react-loader-spinner';
+ReactDOM
+  .createRoot(document.getElementById('root'))
+  .render(
+    <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+      <Blocks
+        visible={true}
+        height="80"
+        width="80"
+        ariaLabel="blocks-loading"
+        wrapperStyle={{}}
+        wrapperClass="blocks-wrapper"
+      />
+      Loading user files...
+    </div>
+  );
+` 
+
+  },
+
+  "/package.json": {
+    code: JSON.stringify(
+      {
+        main: "index.js",
+        dependencies: { 
+          'react': "latest",
+          'react-dom': "latest",
+          'react-loader-spinner': "latest"
+        },
+      }
+    )
+  },
+}
+
 export default function Home() {
   const [userFiles, setUserFiles] = useState<{[key: string]: SandpackFile}>({});
-  // let codeMirrorInstance = React.useRef<CodeEditorRef>();
-
-  // useEffect(() => {
-  //   console.log("cm ref effect");
-  //   const cm = codeMirrorInstance.current;
-  //   if(cm) codeMirrorInstance.current = cm;
-  // }, [codeMirrorInstance]
-  // );
   
   useEffect(() => {
     console.log("useEffect");
-    // window.onstorage = (event) => {
-    //   console.log(event);
-    //   // if(event.key && event.newValue) {
-    //   //   setUserFiles((uf) => ({
-    //   //     ...uf, 
-    //   //     [`${event.key}`]: {code: event.newValue as string}
-    //   //   }))
-    //   // }
-    // }
     window.localStorage.setItem('/package.json', 
       JSON.stringify(
         {
@@ -118,48 +135,40 @@ export default function Home() {
 
     window.localStorage.setItem('/index.js', 
 `import ReactDOM from 'react-dom/client';
-import MyComponent from './MyComponent.tsx';
+import MyComponent from './components/MyComponent.tsx';
 ReactDOM
   .createRoot(document.getElementById('root'))
-  .render(<MyComponent/>);
+  .render(<>MyComponent<br/><MyComponent/></>);
 ` 
     )
     window.localStorage.setItem('/components/MyComponent.tsx', printAst(tsx('MyComponent', ['A', 'B'])));
     window.localStorage.setItem('/components/A.tsx', printAst(tsx('A')));
     window.localStorage.setItem('/components/B.tsx', printAst(tsx('B')));
-    setUserFiles((uf) =>
-      ["/components/MyComponent.tsx", "/components/A.tsx", "/components/B.tsx", "/package.json", "/index.js"]
-      .reduce(
-        (acc: {[key: string]: {code: string}}, file: string) => {
-          const code = window.localStorage.getItem(file);
-          return code ? {...acc, [file]: {code}} : acc;
-        }, uf
-      )
+    setUserFiles((uf) => {
+        const files = 
+          ["/components/MyComponent.tsx", "/components/A.tsx", "/components/B.tsx", "/package.json", "/index.js"]
+          .reduce(
+            (acc: {[key: string]: SandpackFile}, file: string) => {
+              const code = window.localStorage.getItem(file);
+              return code ? {...acc, [file]: {code}} : acc;
+            }, uf
+          )
+        files["/index.js"].readOnly = true;
+        return files;
+      }
     )
   }, []);
 
-  // useEffect(() => {
-  //   Object.entries(blobs).forEach(([filename, blobUrl]) => 
-  //     fetch(blobUrl)
-  //       .then(response => response.text())
-  //       .then(code =>
-  //         setUserFiles((uf) => ({
-  //           ...uf,
-  //           [filename]: { code }
-  //         }))
-  //       )
-  //   )
-  // }, [userFiles]);
-
   return (
-    <div className='flex flex-nowrap '>
-        <div className='flex-auto'>
-            <ElementEditor userFiles={userFiles}/>
-        </div>
-        <EditorSidebar/>
-        <div className='absolute bottom-0 left-0 right-0 p-4'>
-          <ElementDrawer/>
-        </div>
-    </div>
+    <ComponentEditor userFiles={userFiles}/>
+    // <div className='flex flex-nowrap '>
+    //     <div className='flex-auto'>
+    //         <ElementEditor userFiles={userFiles}/>
+    //     </div>
+    //     <EditorSidebar/>
+    //     <div className='absolute bottom-0 left-0 right-0 p-4'>
+    //       <ElementDrawer/>
+    //     </div>
+    // </div>
   )
 }

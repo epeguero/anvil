@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Cross2Icon, CrossCircledIcon, PlusCircledIcon, PlusIcon } from "@radix-ui/react-icons";
 import { PlusCircleIcon } from "lucide-react";
 
-export default function ElementDetails() {
+export default function ComponentDetails() {
   const props = ['onClick', 'active', 'data'];
   const hooks = ['useState', 'useEffect'];
 
