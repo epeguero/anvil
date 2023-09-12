@@ -65,25 +65,30 @@ export function ComponentEditor({
                         : <ComponentPreview/>
                       }
                     </div>
+                    <Separator className='w-full h-[1px] bg-primary'/>
                     <div className='flex-1 flex'>
                       <div className='flex-1 flex min-w-0'>
                       {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <SandpackFileExplorer autoHiddenFiles/> }
                       </div>
+                      <Separator className='bg-primary flex-none w-[1px]' orientation='vertical'/>
                       <div className='flex-[4_1_0] flex min-w-0'>
                         {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <ComponentCodeEditor/> }
                       </div>
                     </div>
                   </div>
                 </div>
+                <Separator className='bg-primary flex-none w-[1px]' orientation='vertical'/>
                 <div className='flex-1 flex'>
-                  <div className='flex-1 min-w-0'>
+                  <div className='flex-1 w-full h-full'>
+                    {/* {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <EditorSidebar/> } */}
+                    {/* <Skeleton className="flex-1 rounded-full"/> */}
                     <EditorSidebar/>
                   </div>
                 </div>
               </div>
-              <Separator orientation="horizontal"/>
-              <div className='flex-1 flex'>
-                {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <ComponentDrawer/> }
+              <Separator className='w-full h-[1px] bg-primary'/>
+              <div className='flex-none'>
+                {ctx?.status === 'initial' ? <Skeleton className="h-[25px] rounded-full"/> : <ComponentDrawer/> }
               </div>
             </div>
           )
