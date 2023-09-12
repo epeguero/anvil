@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import {useRouter} from 'next/navigation';
 import * as ts from "typescript";
 import { ComponentEditor } from '@/components/ComponentEditor';
 import { SandpackFile } from '@codesandbox/sandpack-react';
@@ -118,7 +119,6 @@ ReactDOM
 
 export default function Home() {
   const [userFiles, setUserFiles] = useState<{[key: string]: SandpackFile}>({});
-  
   useEffect(() => {
     console.log("useEffect");
     window.localStorage.setItem('/package.json', 

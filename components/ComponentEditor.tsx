@@ -2,8 +2,9 @@ import {SandpackCodeEditor, SandpackLayout, SandpackPreview, SandpackProvider, S
 import { EditorView, ViewUpdate } from "@codemirror/view"
 import ComponentDrawer from "./ComponentDrawer";
 import EditorSidebar from "./EditorSidebar";
-import { useRef } from "react";
-
+import { Blocks } from "react-loader-spinner";
+import { Separator } from "@radix-ui/react-separator";
+import { Skeleton } from "@/components/ui/skeleton";
 const spinnerFiles = {
   "/index.js" : {
     code: 
@@ -54,19 +55,37 @@ export function ComponentEditor({
         (ctx: SandpackContext | null) => {
           console.log(ctx);
           return (
-            ctx?.editorState
-            ? <>
-                <div className='flex-1'>
-                  <ComponentPreview/>
+            <div className='flex-1 flex-col'>
+              <div className='flex-1 flex'>
+                <div className='flex-[10_1_0] flex'>
+                  <div className='flex-1 flex flex-col'>
+                    <div className='flex-1 flex min-w-0'>
+                      {ctx?.status === 'initial'
+                        ? <Skeleton className="flex-1 rounded-full"/>
+                        : <ComponentPreview/>
+                      }
+                    </div>
+                    <div className='flex-1 flex'>
+                      <div className='flex-1 flex min-w-0'>
+                      {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <SandpackFileExplorer autoHiddenFiles/> }
+                      </div>
+                      <div className='flex-[4_1_0] flex min-w-0'>
+                        {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <ComponentCodeEditor/> }
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className='flex-1 flex min-w-0'>
-                  <SandpackFileExplorer className='flex-1' autoHiddenFiles/>
-                  <ComponentCodeEditor/>
+                <div className='flex-1 flex'>
+                  <div className='flex-1 min-w-0'>
+                    <EditorSidebar/>
+                  </div>
                 </div>
-                <ComponentDrawer/>
-                <EditorSidebar/>
-              </>
-            : <div>Loading...</div>
+              </div>
+              <Separator orientation="horizontal"/>
+              <div className='flex-1 flex'>
+                {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <ComponentDrawer/> }
+              </div>
+            </div>
           )
         }
       }
@@ -77,7 +96,7 @@ export function ComponentEditor({
 
 function ComponentCodeEditor() {
   return (
-    <SandpackConsumer >
+    <SandpackConsumer>
     { (ctx: SandpackContext | null) => (
         <SandpackCodeEditor 
           showTabs={false}
@@ -117,6 +136,10 @@ function Sandpack({
       }
       options ={{
         externalResources: ["https://cdn.tailwindcss.com"],
+        classes: {
+          "sp-wrapper": "",
+          "sp-layout": "",
+        }
       }}
       customSetup = {
         {
@@ -127,7 +150,7 @@ function Sandpack({
         }
       }
     >
-      <SandpackLayout className='flex-col justify-stretch h-screen'>
+      <SandpackLayout>
         {children}
       </SandpackLayout>
     </SandpackProvider>
@@ -140,8 +163,7 @@ export function ComponentPreview({
   const {sandpack} = useSandpack();
   console.log(sandpack);
   return (
-    <SandpackPreview  className='h-full' 
-                      showOpenInCodeSandbox={false}
+    <SandpackPreview  showOpenInCodeSandbox={false}
                       showRefreshButton
                       showRestartButton
     />

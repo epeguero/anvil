@@ -7,19 +7,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+
 import EditorOutline from "./EditorOutline";
 import ComponentDetails from "./ComponentDetails";
-import { Separator } from "@/components/ui/separator"
 
 export default function EditorSidebar() {
   return (
-    <div className='w-60 h-screen overflow-hidden'>
-      <Card className='h-1/3 rounded-sm'>
+    <div className='flex flex-col justify-items-stretch items-stretch'>
+      <Card className='flex-1 rounded-sm'>
         <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
         <Separator/>
         <EditorOutline/>
       </Card>
-      <Card className='h-2/3 rounded-sm'>
+      <Card className='flex-2 rounded-sm'>
         <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
         <ComponentDetails/>
       </Card>

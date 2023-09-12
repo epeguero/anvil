@@ -19,8 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body 
         id={'root'}
-        className={inter.className + ' bg-neutral-500'} 
-        style={{ margin: 0 }}
+        className={inter.className + ' bg-neutral-500 m-0 h-screen w-screen'} 
       >
         {children}
       </body>
