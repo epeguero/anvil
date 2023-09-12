@@ -14,13 +14,13 @@ import ComponentDetails from "./ComponentDetails";
 
 export default function EditorSidebar() {
   return (
-    <div className='flex flex-col justify-items-stretch items-stretch'>
+    <div className='flex-1 flex flex-col'>
       <Card className='flex-1 rounded-sm'>
         <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
         <Separator/>
         <EditorOutline/>
       </Card>
-      <Card className='flex-2 rounded-sm'>
+      <Card className='flex-1 rounded-sm'>
         <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
         <ComponentDetails/>
       </Card>

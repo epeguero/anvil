@@ -55,9 +55,9 @@ export function ComponentEditor({
         (ctx: SandpackContext | null) => {
           console.log(ctx);
           return (
-            <div className='flex-1 flex-col'>
+            <div className='flex-1 flex flex-col'>
               <div className='flex-1 flex'>
-                <div className='flex-[10_1_0] flex'>
+                <div className='flex-[3_1_0] flex'>
                   <div className='flex-1 flex flex-col'>
                     <div className='flex-1 flex min-w-0'>
                       {ctx?.status === 'initial'
@@ -78,12 +78,12 @@ export function ComponentEditor({
                   </div>
                 </div>
                 <Separator className='bg-primary flex-none w-[1px]' orientation='vertical'/>
-                <div className='flex-1 flex'>
-                  <div className='flex-1 w-full h-full'>
-                    {/* {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <EditorSidebar/> } */}
-                    {/* <Skeleton className="flex-1 rounded-full"/> */}
-                    <EditorSidebar/>
-                  </div>
+                <div className='flex-1 flex flex-col'>
+                  <EditorSidebar/>
+                  {/* <div className='flex-1 w-full h-full'>
+                    {ctx?.status === 'initial' ? <Skeleton className="flex-1 rounded-full"/> : <EditorSidebar/> } */}
+                    {/* <Skeleton className="flex-1 rounded-full"/>
+                  </div> */}
                 </div>
               </div>
               <Separator className='w-full h-[1px] bg-primary'/>
@@ -143,7 +143,7 @@ function Sandpack({
         externalResources: ["https://cdn.tailwindcss.com"],
         classes: {
           "sp-wrapper": "",
-          "sp-layout": "",
+          "sp-layout": "h-screen",
         }
       }}
       customSetup = {
