@@ -19,6 +19,7 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
     {
       files: cFiles,
       options: {
+        externalResources: ["https://cdn.tailwindcss.com"],
         classes: {
           "sp-preview": "h-44 w-44",
           "sp-preview-container": "h-44 w-44",
@@ -29,7 +30,11 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
       customSetup: {
         dependencies: {
           "react": "latest",
-          "react-dom": "latest"
+          "react-dom": "latest",
+          '@radix-ui/react-slot': 'latest',
+          'class-variance-authority': 'latest',
+          'clsx': 'latest',
+          'tailwind-merge': 'latest'
         },
         entry: "/index.js"
       }
@@ -45,7 +50,7 @@ export function newComponent(name: string) {
 import ${name} from './components/${name}.tsx';
 ReactDOM
 .createRoot(document.getElementById('root'))
-.render(<${name}/>);
+.render(<div className='absolute left-[50%] top-[50%]'><${name}/></div>);
 ` 
     },
     [`/components/${name}.tsx`]: {code: `export default function ${name}() { return ("${name}"); }`},
@@ -55,7 +60,11 @@ ReactDOM
           entry: '/index.js',
           dependencies: {
             'react': 'latest',
-            'react-dom': 'latest'
+            'react-dom': 'latest',
+            '@radix-ui/react-slot': 'latest',
+            'class-variance-authority': 'latest',
+            'clsx': 'latest',
+            'tailwind-merge': 'latest'
           }
         }
       )

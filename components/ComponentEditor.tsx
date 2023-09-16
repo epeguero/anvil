@@ -22,7 +22,7 @@ const sandpackProviderProps = (components: Components, activeComponent: string):
       activeFile: `/components/${activeComponent}.tsx`,
       visibleFiles: Object.keys(components[activeComponent]),
       // recompileMode: "immediate",
-      // externalResources: ["https://cdn.tailwindcss.com"],
+      externalResources: ["https://cdn.tailwindcss.com"],
       classes: {
         "sp-wrapper": "flex-1 flex flex-col",
         "sp-layout": "flex-1 flex flex-col",
