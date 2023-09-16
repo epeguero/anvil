@@ -21,9 +21,9 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
       options: {
         externalResources: ["https://cdn.tailwindcss.com"],
         classes: {
-          "sp-preview": "h-44 w-44",
-          "sp-preview-container": "h-44 w-44",
-          "sp-preview-iframe": "h-44 w-44",
+          "sp-preview": "component-preview",
+          "sp-preview-container": "",
+          "sp-preview-iframe": "",
           "sp-preview-actions": "hidden",
         }
       },
@@ -50,7 +50,7 @@ export function newComponent(name: string) {
 import ${name} from './components/${name}.tsx';
 ReactDOM
 .createRoot(document.getElementById('root'))
-.render(<div className='absolute left-[50%] top-[50%]'><${name}/></div>);
+.render(<div className='flex flex-wrap h-screen justify-around content-around'><${name}/></div>);
 ` 
     },
     [`/components/${name}.tsx`]: {code: `export default function ${name}() { return ("${name}"); }`},
@@ -114,8 +114,14 @@ export default function ComponentDrawer({
                 <div  className='z-0 shrink-0 w-44 h-44 border group-hover/component:shadow-lg group-hover/component:shadow-black/50 transition-all'
                 >
                   <SandpackProvider {...sandpackPreviewProviderProps({cName: cFiles})}>
+                    <style>{`
+                      .component-preview iframe { height: 100% !important; width: 100%; }
+                    `}</style>
                     <SandpackLayout>
-                      <SandpackPreview showOpenInCodeSandbox={false} showRefreshButton={false}/>
+                      <SandpackPreview 
+                        showOpenInCodeSandbox={false} 
+                        showRefreshButton={false}
+                      />
                     </SandpackLayout> 
                   </SandpackProvider>
               </div>

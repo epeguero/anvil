@@ -864,8 +864,16 @@ body {
   flex-direction: column-reverse;
 }
 
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
 .flex-nowrap {
   flex-wrap: nowrap;
+}
+
+.content-around {
+  align-content: space-around;
 }
 
 .items-center {
@@ -886,6 +894,10 @@ body {
 
 .justify-between {
   justify-content: space-between;
+}
+
+.justify-around {
+  justify-content: space-around;
 }
 
 .justify-items-center {
