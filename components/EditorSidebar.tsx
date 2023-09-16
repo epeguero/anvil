@@ -14,17 +14,19 @@ import ComponentDetails from "./ComponentDetails";
 
 export default function EditorSidebar() {
   return (
-    <div className='flex-1 flex flex-col'>
-      <Card className='flex-1 rounded-sm'>
-        <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
-        <Separator/>
-        <EditorOutline/>
-      </Card>
-      <Card className='flex-1 rounded-sm'>
-        <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
-        <ComponentDetails/>
-      </Card>
-    </div>
+    <Card className='flex-1 flex flex-col rounded-none rounded-tr-lg'>
+      <CardContent className='flex-1 flex flex-col p-1'>
+        <Card className='flex-1 rounded-sm'>
+          <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
+          <Separator/>
+          <EditorOutline/>
+        </Card>
+        <Card className='flex-1 rounded-sm'>
+          <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
+          <ComponentDetails/>
+        </Card>
+      </CardContent>
+    </Card>
     // <Sidebar>
     //   <Menu closeOnClick={false} >
     //     <SubMenu  className="h-72 w-48 rounded-md border" 

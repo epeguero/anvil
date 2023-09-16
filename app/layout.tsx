@@ -19,7 +19,8 @@ export default function RootLayout({
     <html lang="en">
       <body 
         id={'root'}
-        className={inter.className + ' bg-neutral-500 m-0 h-screen w-screen'} 
+        className={inter.className + ' ' + 
+          'flex bg-stone-800 p-4 h-screen w-screen'} 
       >
         {children}
       </body>
