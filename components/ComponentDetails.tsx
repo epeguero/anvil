@@ -20,7 +20,7 @@ export default function ComponentDetails() {
   return (
     <>
     <Accordion key={'accordion-props'} className='p-2' type="single" collapsible>
-      <AccordionItem value="item-1">
+      <AccordionItem value="item-1" className='border-none'>
         <AccordionTrigger>Props</AccordionTrigger>
         <AccordionContent>
           <ScrollArea>
@@ -31,7 +31,6 @@ export default function ComponentDetails() {
                     <button><CrossCircledIcon/></button>
                     <Label htmlFor={prop}>{prop}</Label>
                   </div>
-                  <Separator/>
                 </div>
               ))}
               <div className="flex items-center space-x-2 pb-1">
@@ -43,8 +42,8 @@ export default function ComponentDetails() {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
-    <Accordion key={'accordion-hooks'} className='pl-2' type='single' collapsible>
-      <AccordionItem value="item-1">
+    <Accordion key={'accordion-hooks'} className='p-2' type='single' collapsible>
+      <AccordionItem value="item-1" className='border-none'>
         <AccordionTrigger>Hooks</AccordionTrigger>
         <AccordionContent>
           <ScrollArea>

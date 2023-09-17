@@ -20,7 +20,7 @@ export default function RootLayout({
       <body 
         id={'root'}
         className={inter.className + ' ' + 
-          'flex bg-stone-800 p-4 h-screen w-screen'} 
+          'flex p-4 h-screen w-screen'} 
       >
         {children}
       </body>

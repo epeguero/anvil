@@ -36,8 +36,12 @@
   }
  
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* --background: 0 0% 45.1%; */
+    /* --background: 30 6.3% 25.1%; */
+    --background: 12 6.5% 15.1%;
+    /* --foreground: 210 40% 98%; */
+    /* --foreground: 20 5.9% 90%; */
+    --foreground: 24 5.7% 82.9%; 
  
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
@@ -71,6 +75,6 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply dark bg-background text-foreground;
   }
 }

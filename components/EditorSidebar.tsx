@@ -14,30 +14,23 @@ import ComponentDetails from "./ComponentDetails";
 
 export default function EditorSidebar() {
   return (
-    <Card className='flex-1 flex flex-col rounded-none rounded-tr-lg'>
-      <CardContent className='flex-1 flex flex-col p-1'>
-        <Card className='flex-1 rounded-sm'>
-          <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
-          <Separator/>
-          <EditorOutline/>
-        </Card>
-        <Card className='flex-1 rounded-sm'>
-          <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
-          <ComponentDetails/>
-        </Card>
-      </CardContent>
-    </Card>
-    // <Sidebar>
-    //   <Menu closeOnClick={false} >
-    //     <SubMenu  className="h-72 w-48 rounded-md border" 
-    //               label="Outline"
-    //               defaultOpen={true}
-    //     >
-    //     <MenuItem>
-    //     </MenuItem>
-    //     </SubMenu>
-    //   </Menu>
-    // </Sidebar>
+    <>
+      <EditorOutline/>
+      <ComponentDetails/>
+    </>
+    // <Card className='rounded-none rounded-tr-lg'>
+    //   <CardContent className='flex flex-col p-1'>
+    //     <Card className='flex-1 rounded-sm'>
+    //       <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
+    //       <Separator/>
+    //       <EditorOutline/>
+    //     </Card>
+    //     <Card className='flex-1 rounded-sm'>
+    //       <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
+    //       <ComponentDetails/>
+    //     </Card>
+    //   </CardContent>
+    // </Card>
   );
 
 }

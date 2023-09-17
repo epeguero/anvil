@@ -21,9 +21,9 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
       options: {
         externalResources: ["https://cdn.tailwindcss.com"],
         classes: {
-          "sp-preview": "component-preview",
-          "sp-preview-container": "",
-          "sp-preview-iframe": "",
+          "sp-preview": "h-full w-full component-preview",
+          "sp-preview-container": "h-full w-full",
+          "sp-preview-iframe": "h-full w-full",
           "sp-preview-actions": "hidden",
         }
       },
@@ -84,7 +84,7 @@ export default function ComponentDrawer({
   return (
     <Sheet modal={false}>
       <SheetTrigger>
-        <div className='flex h-items-center gap-1 m-1 text-xs'>
+        <div className='flex w-full h-items-center gap-1 m-1 text-xs'>
           <MixIcon/>
           Component Drawer
         </div>

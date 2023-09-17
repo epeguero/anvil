@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card"
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 
-const sandpackProviderProps = (components: Components, activeComponent: string): SandpackProviderProps => 
+const initialSandpackProviderProps = (components: Components, activeComponent: string): SandpackProviderProps => 
 (
   {
     files: (
@@ -24,15 +24,22 @@ const sandpackProviderProps = (components: Components, activeComponent: string):
       // recompileMode: "immediate",
       externalResources: ["https://cdn.tailwindcss.com"],
       classes: {
-        "sp-wrapper": "flex-1 flex flex-col",
-        "sp-layout": "flex-1 flex flex-col",
-        "sp-preview": "invisible flex-1 flex",
-        "sp-preview-container": "flex-1 flex flex-col",
-        "sp-preview-iframe": "flex-1 flex",
-        "sp-preview-actions": "flex-none flex p-1 justify-end",
+        "sp-wrapper": "h-full w-full",
+        "sp-layout": "h-full w-full",
+
+        "sp-preview": "h-full w-full",
+        "sp-preview-container": "h-full w-full flex flex-col",
+        "sp-preview-iframe": "flex-1 border",
+        "sp-preview-actions": "order-first py-1 flex justify-end",
         "sp-icon-standalone": "flex-none",
-        "sp-editor": "flex-1",
-        "sp-console": "invisible flex-1 flex flex-col",
+
+        "sp-file-explorer": "h-full w-full",
+        "sp-file-explorer-list": "h-full w-full",
+        "sp-explorer": "h-full w-full flex items-center gap-1",
+
+        "sp-code-editor": "max-h-[40vh] overflow-auto",
+
+        "sp-console": "flex-1 flex flex-col",
         "sp-console-list": "flex-1 flex flex-col",
         "sp-console-actions": "flex-none flex p-1 justify-end",
       }
@@ -59,6 +66,8 @@ export function ComponentEditor({
     newComponent("Placeholder")
   );
   const [activeComponent, setActiveComponent] = useState<string>('Placeholder');
+  const [spProviderProps, setSpProviderProps] = useState<SandpackProviderProps>(initialSandpackProviderProps(components, activeComponent));
+
   const MemoComponentCodeEditor = useMemo(
     () => memo(ComponentCodeEditor, (oldProps, newProps) => 
         oldProps.componentName === newProps.componentName
@@ -81,74 +90,80 @@ export function ComponentEditor({
     ,[])
   console.log("component editor rerender", components)
 
-  console.log(sandpackProviderProps(components, activeComponent));
+  console.log(spProviderProps);
   return (
-    <SandpackProvider {...sandpackProviderProps(components, activeComponent)}>
+    <SandpackProvider {...spProviderProps}>
       <SandpackLayout>
       <SandpackConsumer>
       { 
         (ctx: SandpackContext | null) => {
           console.log(ctx);
           return (
-            <div className='flex-1 flex flex-col'>
-              <div className='flex-1 flex'>
-                <div className='flex-[3_1_0] flex'>
-                  <div className='flex-1 flex flex-col'>
-                    <Card className='flex flex-col flex-1 p-1 rounded-none rounded-tl-lg'>
-                      <div className='flex-1 flex'>
-                        {ctx?.status === 'initial'
-                          ? <Skeleton className="flex-1 rounded-full"/>
-                          : 
-                          <Card className='flex-1 flex rounded-none'>
-                            <CardContent className='flex-1 flex p-1'>
-                              <ComponentPreview/>
-                            </CardContent>
-                          </Card>
-                        }
-                      </div>
-                      <div className='flex-1 flex'>
-                        <div className='flex-1 flex'>
-                          {ctx?.status === 'initial' 
-                            ? <Skeleton className="flex-1 rounded-full"/> 
-                            : <ComponentFileExplorer/>
-                          }
-                        </div>
-                        <div className='flex-[4_1_0] flex'>
-                          {ctx?.status === 'initial' || !ctx
-                            ? <Skeleton className="flex-1 rounded-full"/> 
-                            : <Card className='flex-1 flex rounded-none'>
-                                <MemoComponentCodeEditor  
-                                  componentName={activeComponent}
-                                  sandpack={ctx}
-                                  onEdit={handleComponentEdit}
-                                />
-                              </Card>
-                          }
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-                <div className='flex-1 flex flex-col'>
-                  <EditorSidebar/>
-                </div>
-              </div>
-              <div className='flex-none flex border-solid border-black rounded-b-lg bg-white'>
-                {ctx?.status === 'initial' || !ctx
-                  ? <Skeleton className="h-[25px] rounded-full"/> 
-                  : <ComponentDrawer  components={components}
-                                      addComponent={
-                                        (component: Component) => {
-                                          setComponents(
-                                            cs => ({...cs, ...component})
-                                          )
-                                          setActiveComponent(Object.keys(component)[0]);
-                                        }
-                                      }
-                                      onSelectComponent={(name: string) => {setActiveComponent(name); console.log(name);}}
-                    /> 
+            <div className='grid h-full w-full place-items-stretch gap-4 grid-cols-[1fr_3fr_1fr] grid-rows-[1fr_1fr_25px]' style={{gridTemplateAreas: ["'preview preview sidebar'","'files code sidebar'", "'drawer drawer drawer'"].join('\n')}}>
+              <div style={{gridArea: 'preview'}}>
+                {ctx?.status === 'initial'
+                  ? <Skeleton className="rounded-full"/>
+                  : 
+                  <ComponentPreview/>
                 }
               </div>
+              <div style={{gridArea: 'files'}}>
+                {ctx?.status === 'initial' 
+                  ? <Skeleton className="rounded-full"/> 
+                  : <ComponentFileExplorer/>
+                }
+              </div>
+              <div style={{gridArea: 'code'}}>
+                {ctx?.status === 'initial' || !ctx
+                  ? <Skeleton className="rounded-full"/> 
+                  : <MemoComponentCodeEditor  
+                      componentName={activeComponent}
+                      sandpack={ctx}
+                      onEdit={handleComponentEdit}
+                    />
+                }
+              </div>
+              <div style={{gridArea: 'sidebar'}}>
+                <EditorSidebar/>
+              </div>
+
+            <div style={{gridArea: 'drawer'}}>
+            {ctx?.status === 'initial' || !ctx
+              ? <Skeleton className="h-[25px] rounded-full"/> 
+              : <ComponentDrawer  components={components}
+                                  addComponent={
+                                    (newComponent: Component) => {
+                                      setComponents(
+                                        cs => ({...cs, ...newComponent})
+                                      )
+                                      const newComponentName = Object.keys(newComponent)[0];
+                                      const newComponentFiles = newComponent[newComponentName];
+                                      setActiveComponent(newComponentName);
+                                      setSpProviderProps(
+                                        (p) => {
+                                          console.log(newComponent);
+                                          if (p.options && p.files) {
+                                            p.files = {...p.files, ...newComponentFiles};
+                                            p.options.activeFile = `/components/${newComponentName}.tsx`;
+                                            p.options.visibleFiles = Object.keys(newComponentFiles);
+                                            console.log(p);
+                                          }
+                                          return {...p};
+                                        }
+                                        // (p) => ({
+                                        //   ...p,
+                                        //   options: {
+                                        //     ...p.options,
+                                        //     activeFile: `/components/${newComponentName}.tsx`
+                                        //   }
+                                        // })
+                                      );
+                                    }
+                                  }
+                                  onSelectComponent={(name: string) => {setActiveComponent(name); console.log(name);}}
+                /> 
+            }
+            </div>
             </div>
           )
         }
@@ -187,26 +202,42 @@ function ComponentCodeEditor({
   // }, [])
   console.log(`${componentName}:${sandpack.activeFile}`);
   return (
-        <SandpackCodeEditor 
-          // ref={editorRef}
-          showTabs={false}
-          // initMode="immediate"
-          extensions={[
-            EditorView.updateListener.of(
-              (update: ViewUpdate) => {
-                if(update.docChanged) {
-                  const file = sandpack.activeFile;
-                  const newCode = update.state.doc.toString();
-                  console.log(`editor change: updating ${componentName}:${file}`);
-                  onEdit(componentName, file, newCode);
-                }
+    <>
+      <style>{`
+        .cm-gutterElement {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .cm-scroller {
+          display: flex;
+          gap: 1rem;
+        }
+        ::-webkit-scrollbar-thumb {
+          scrollbar-color: blue black;
+        }
+      `}</style>
+      <SandpackCodeEditor 
+        // ref={editorRef}
+        showTabs={false}
+        // initMode="immediate"
+        extensions={[
+          EditorView.updateListener.of(
+            (update: ViewUpdate) => {
+              if(update.docChanged) {
+                const file = sandpack.activeFile;
+                const newCode = update.state.doc.toString();
+                console.log(`editor change: updating ${componentName}:${file}`);
+                onEdit(componentName, file, newCode);
               }
-            )
-          ]}
-          showLineNumbers
-          wrapContent
-          showInlineErrors={false}
-        />
+            }
+          )
+        ]}
+        showLineNumbers
+        wrapContent
+        showInlineErrors={false}
+      />
+    </>
   );
 }
 
@@ -245,26 +276,26 @@ export function ComponentPreview({
   // const c = previewRef.current?.getClient();
 
   return (
-    <CardContent className='flex-1 flex flex-col border p-0 resize overflow-auto'>
-      <style>{`
-        .sp-console {
-          visibility: ${mode === 'console' ? 'visible' : 'hidden'};
-          max-height: ${mode === 'console' ? '100%' : '0%'};
-          flex: ${mode === 'console' ? '1 1 0' : '0 0 0'};
-        } 
-        .sp-preview{
-          visibility: ${mode === 'preview' ? 'visible' : 'hidden'};
-          max-height: ${mode === 'preview' ? '100%' : '0%'};
-          flex: ${mode === 'preview' ? '1 1 0' : '0 0 0'};
-        } 
-      `}</style> 
-        {/* <SandpackConsole    actionsChildren={<button onClick={() => setMode('preview')}>Show Preview</button>}
-                            // ref={consoleRef}
-                            showSyntaxError
-                            resetOnPreviewRestart
-                            // showHeader
-                            // showSetupProgress
-          /> */}
+    // <CardContent className='flex-1 flex flex-col border p-0 resize overflow-auto'>
+    //   <style>{`
+    //     .sp-console {
+    //       visibility: ${mode === 'console' ? 'visible' : 'hidden'};
+    //       max-height: ${mode === 'console' ? '100%' : '0%'};
+    //       flex: ${mode === 'console' ? '1 1 0' : '0 0 0'};
+    //     } 
+    //     .sp-preview{
+    //       visibility: ${mode === 'preview' ? 'visible' : 'hidden'};
+    //       max-height: ${mode === 'preview' ? '100%' : '0%'};
+    //       flex: ${mode === 'preview' ? '1 1 0' : '0 0 0'};
+    //     } 
+    //   `}</style> 
+    //     {/* <SandpackConsole    actionsChildren={<button onClick={() => setMode('preview')}>Show Preview</button>}
+    //                         // ref={consoleRef}
+    //                         showSyntaxError
+    //                         resetOnPreviewRestart
+    //                         // showHeader
+    //                         // showSetupProgress
+    //       /> */}
 
         <SandpackPreview    showOpenInCodeSandbox={false}
                             showRefreshButton
@@ -275,6 +306,6 @@ export function ComponentPreview({
                             //   <button onClick={() => setMode('console')}>Show Console</button>
                             // }
         />
-    </CardContent>
+    // </CardContent>
   );
 }
