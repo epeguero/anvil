@@ -72,3 +72,62 @@ export function tsx(name: string, children: string[] = [], externalDeps: ts.Impo
 
   return tsx;
 }
+
+function ast(code: string) {
+  return ts.createSourceFile(
+    'code.tsx',
+    code,
+    ts.ScriptTarget.Latest,
+    false,
+    ts.ScriptKind.TS
+  );
+}
+
+export function getProps(code: string): string[] {
+  const bindings = getPropsBindingPattern(ast(code));
+  return (bindings?.elements.map(e => e.name.escapedText) || [])
+}
+
+export function addProps(code: string, prop: string) {
+  const codeAst = ast(code);
+
+  const propsBindings = getPropsBindingPattern(codeAst);
+  const propsBindingsElements = (propsBindings?.elements || ts.factory.createNodeArray()).concat(
+    ts.factory.createBindingElement(
+      undefined, undefined, ts.factory.createIdentifier(prop), undefined
+    )
+  );
+
+  if(propsBindings) {
+    propsBindings.elements = propsBindingsElements;
+  }
+  else {
+    getDefaultExportFunction(codeAst).parameters = 
+      ts.factory.createNodeArray([
+        ts.factory.createObjectBindingPattern(propsBindingsElements)
+      ])
+  }
+  return printAst(codeAst);
+}
+
+function getPropsBindingPattern(ast: ts.SourceFile): ts.ObjectBindingPattern | null {
+  return getDefaultExportFunction(ast)
+    .parameters[0]?.name as ts.ObjectBindingPattern | null;
+}
+
+function getDefaultExportFunction(source: ts.SourceFile): ts.FunctionDeclaration {
+  return source.statements.find(
+    s => ts.isFunctionDeclaration(s) 
+    && s.modifiers
+    && s.modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword)
+    && s.modifiers.some(m => m.kind === ts.SyntaxKind.DefaultKeyword)
+  ) 
+  ??
+  (() => {
+      throw(
+        new Error(
+          `My Custom Error: Could not find default export function in ${source.fileName}`
+        )
+      )
+  })();
+}

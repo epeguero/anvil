@@ -23,8 +23,10 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
         classes: {
           "sp-preview": "h-full w-full component-preview",
           "sp-preview-container": "h-full w-full",
-          "sp-preview-iframe": "h-full w-full",
+          "sp-preview-iframe": "h-full w-full bg-foreground",
           "sp-preview-actions": "hidden",
+          "sp-wrapper": "h-full",
+          "sp-layout": "h-full"
         }
       },
       customSetup: {
@@ -43,14 +45,14 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
 }
 
 export function newComponent(name: string) {
-  return { [name]: 
+  return { [name]:
     {
       '/index.js': {code: 
 `import ReactDOM from 'react-dom/client';
 import ${name} from './components/${name}.tsx';
 ReactDOM
 .createRoot(document.getElementById('root'))
-.render(<div className='flex flex-wrap h-screen justify-around content-around'><${name}/></div>);
+.render(<${name}/>);
 ` 
     },
     [`/components/${name}.tsx`]: {code: `export default function ${name}() { return ("${name}"); }`},
@@ -89,12 +91,12 @@ export default function ComponentDrawer({
           Component Drawer
         </div>
       </SheetTrigger>
-      <SheetContent side="bottom">
+      <SheetContent side="bottom" className="border">
         <SheetHeader>
           <SheetTitle>Component Drawer</SheetTitle>
         </SheetHeader>
         <div className='flex overflow-y-auto gap-10 p-4 items-stretch '> 
-          <div className='group/add shrink-0 w-44 h-44 flex bg-zinc-100 transition-all :transition-all hover:shadow-lg hover:shadow-black/50'
+          <div className='group/add shrink-0 w-44 h-44 flex bg-foreground transition-all :transition-all hover:shadow-lg hover:shadow-black/50'
                 onClick={
                   () => {
                     addComponent(newComponent('New'));

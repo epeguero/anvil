@@ -6,7 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card, CardContent
 } from "@/components/ui/card"
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { addProps, getProps } from "@/lib/ast";
+import { access } from "fs";
 
 const initialSandpackProviderProps = (components: Components, activeComponent: string): SandpackProviderProps => 
 (
@@ -29,15 +31,17 @@ const initialSandpackProviderProps = (components: Components, activeComponent: s
 
         "sp-preview": "h-full w-full",
         "sp-preview-container": "h-full w-full flex flex-col",
-        "sp-preview-iframe": "flex-1 border",
-        "sp-preview-actions": "order-first py-1 flex justify-end",
+        "sp-preview-iframe": "flex-1 border bg-foreground",
+        "sp-preview-actions": "pt-1 flex justify-center bg-background",
         "sp-icon-standalone": "flex-none",
 
         "sp-file-explorer": "h-full w-full",
         "sp-file-explorer-list": "h-full w-full",
         "sp-explorer": "h-full w-full flex items-center gap-1",
 
-        "sp-code-editor": "max-h-[40vh] overflow-auto",
+        // "sp-code-editor": "max-h-[60%] h-full overflow-auto",
+        "sp-editor": "h-full overflow-y-auto overflow-x-hidden",
+        // "sp-cm": "h-full",
 
         "sp-console": "flex-1 flex flex-col",
         "sp-console-list": "flex-1 flex flex-col",
@@ -56,7 +60,7 @@ const initialSandpackProviderProps = (components: Components, activeComponent: s
 
 export type ComponentFiles = {[file: string]: SandpackFile};
 export type Component = {[cName: string]: ComponentFiles};
-export type Components = {[name: string]: ComponentFiles};
+export type Components = {[cName: string]: ComponentFiles};
 
 export function ComponentEditor({
 }: {
@@ -68,11 +72,20 @@ export function ComponentEditor({
   const [activeComponent, setActiveComponent] = useState<string>('Placeholder');
   const [spProviderProps, setSpProviderProps] = useState<SandpackProviderProps>(initialSandpackProviderProps(components, activeComponent));
 
+  useEffect(() => {
+    setSpProviderProps((p: SandpackProviderProps) => {
+      const files = Object.values(components).reduce(
+        (acc, f) => ({...acc, ...f}), {}
+      );
+      return {...p, files};
+    });
+  }, [components])
+
   const MemoComponentCodeEditor = useMemo(
     () => memo(ComponentCodeEditor, (oldProps, newProps) => 
         oldProps.componentName === newProps.componentName
         &&
-        oldProps.sandpack === newProps.sandpack
+        oldProps.sandpack.files === newProps.sandpack.files
     )
     ,[]
   );
@@ -82,38 +95,54 @@ export function ComponentEditor({
         setComponents(
           (cs: Components) => {
             cs[componentName][file].code = newCode;
-            console.log(cs);
             return {...cs};
           }
         )
       }
-    ,[])
-  console.log("component editor rerender", components)
+    ,[]);
 
-  console.log(spProviderProps);
+  const handleGetProps = 
+    () => {
+      const componentFileName = `/components/${activeComponent}.tsx`;
+      const file = components[activeComponent][componentFileName];
+      return getProps(file.code);
+    }
+
+  const handleAddProp = 
+    (propName: string) => {
+      const componentFileName = `/components/${activeComponent}.tsx`;
+      const file = components[activeComponent][componentFileName];
+      const codeWithProp = addProps(file.code, propName);
+      setComponents(
+        (cs: Components) => {
+          file.code = codeWithProp;
+          return {...cs};
+        }
+      );
+    }
+
   return (
     <SandpackProvider {...spProviderProps}>
       <SandpackLayout>
       <SandpackConsumer>
       { 
         (ctx: SandpackContext | null) => {
-          console.log(ctx);
           return (
-            <div className='grid h-full w-full place-items-stretch gap-4 grid-cols-[1fr_3fr_1fr] grid-rows-[1fr_1fr_25px]' style={{gridTemplateAreas: ["'preview preview sidebar'","'files code sidebar'", "'drawer drawer drawer'"].join('\n')}}>
-              <div style={{gridArea: 'preview'}}>
+            <div className='grid h-full w-full place-items-stretch gap-2 grid-cols-[1fr_4fr_2fr] grid-rows-[1fr_1fr_25px]' style={{gridTemplateAreas: ["'preview preview sidebar'","'files code sidebar'", "'drawer drawer drawer'"].join('\n')}}>
+              <div className='bg-card' style={{gridArea: 'preview'}}>
                 {ctx?.status === 'initial'
                   ? <Skeleton className="rounded-full"/>
                   : 
                   <ComponentPreview/>
                 }
               </div>
-              <div style={{gridArea: 'files'}}>
+              <div className='bg-card p-2' style={{gridArea: 'files'}}>
                 {ctx?.status === 'initial' 
                   ? <Skeleton className="rounded-full"/> 
                   : <ComponentFileExplorer/>
                 }
               </div>
-              <div style={{gridArea: 'code'}}>
+              <div className='min-h-0 min-w-0 bg-card p-2' style={{gridArea: 'code'}}>
                 {ctx?.status === 'initial' || !ctx
                   ? <Skeleton className="rounded-full"/> 
                   : <MemoComponentCodeEditor  
@@ -123,11 +152,14 @@ export function ComponentEditor({
                     />
                 }
               </div>
-              <div style={{gridArea: 'sidebar'}}>
-                <EditorSidebar/>
+              <div className='bg-card' style={{gridArea: 'sidebar'}}>
+                <EditorSidebar 
+                  addPropHandler={handleAddProp}
+                  getPropsHandler={handleGetProps}
+                />
               </div>
 
-            <div style={{gridArea: 'drawer'}}>
+            <div className='bg-card' style={{gridArea: 'drawer'}}>
             {ctx?.status === 'initial' || !ctx
               ? <Skeleton className="h-[25px] rounded-full"/> 
               : <ComponentDrawer  components={components}
@@ -141,12 +173,10 @@ export function ComponentEditor({
                                       setActiveComponent(newComponentName);
                                       setSpProviderProps(
                                         (p) => {
-                                          console.log(newComponent);
                                           if (p.options && p.files) {
                                             p.files = {...p.files, ...newComponentFiles};
                                             p.options.activeFile = `/components/${newComponentName}.tsx`;
                                             p.options.visibleFiles = Object.keys(newComponentFiles);
-                                            console.log(p);
                                           }
                                           return {...p};
                                         }
@@ -160,7 +190,7 @@ export function ComponentEditor({
                                       );
                                     }
                                   }
-                                  onSelectComponent={(name: string) => {setActiveComponent(name); console.log(name);}}
+                                  onSelectComponent={(name: string) => {setActiveComponent(name);}}
                 /> 
             }
             </div>
@@ -200,7 +230,7 @@ function ComponentCodeEditor({
   //   }, 1000);
   //   return () => clearInterval(intervalId);
   // }, [])
-  console.log(`${componentName}:${sandpack.activeFile}`);
+  // console.log(`${componentName}:${sandpack.activeFile}`);
   return (
     <>
       <style>{`
@@ -212,6 +242,9 @@ function ComponentCodeEditor({
         .cm-scroller {
           display: flex;
           gap: 1rem;
+        }
+        .cm-editor {
+          //background-color: pink
         }
         ::-webkit-scrollbar-thumb {
           scrollbar-color: blue black;
@@ -227,7 +260,7 @@ function ComponentCodeEditor({
               if(update.docChanged) {
                 const file = sandpack.activeFile;
                 const newCode = update.state.doc.toString();
-                console.log(`editor change: updating ${componentName}:${file}`);
+                // console.log(`editor change: updating ${componentName}:${file}`);
                 onEdit(componentName, file, newCode);
               }
             }
@@ -251,14 +284,14 @@ export function ComponentPreview({
   const [previewRef, setPreviewRef] = useState<any>(useRef<any>());
   const [consoleRef, setConsoleRef] = useState<any>(useRef<any>());
 
-  Object.entries(sandpack.clients).forEach(([clientId, client]) => {
-    client.options.showErrorScreen = false;
-    client.listen((msg) => {
-      console.warn(msg);
-    });
-    // client.options.width = client.errors.length ? client.options.width
-  })
-  console.log(sandpack);
+  // Object.entries(sandpack.clients).forEach(([clientId, client]) => {
+  //   client.options.showErrorScreen = false;
+  //   client.listen((msg) => {
+  //     console.warn(msg);
+  //   });
+  //   // client.options.width = client.errors.length ? client.options.width
+  // })
+  // console.log(sandpack);
   // useEffect(() => 
   //   setPreviewRef(
   //     (pf: any) => {
