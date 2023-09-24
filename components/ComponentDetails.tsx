@@ -15,10 +15,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Cross2Icon, CrossCircledIcon, PlusCircledIcon, PlusIcon } from "@radix-ui/react-icons";
 import { PlusCircleIcon } from "lucide-react";
-import React, { BaseSyntheticEvent, FormEvent, RefObject, useRef, useState } from "react";
+import React, { BaseSyntheticEvent, FormEvent, RefObject, useEffect, useRef, useState } from "react";
 import 'react-hook-form';
 import { FieldErrors, FieldValues, FormProvider, Resolver, SubmitHandler, UseFormReturn, useForm } from "react-hook-form";
 import { ObjectSchema } from "yup";
+import { eventNames } from "process";
 
 export default function ComponentDetails({
   getPropsHandler,
@@ -48,10 +49,11 @@ export default function ComponentDetails({
                   </div>
                 </div>
               ))}
-              <AddPropForm
+              <AddPropForm existingProps={existingProps} addPropHandler={addPropHandler}/>
+              {/* <AddPropForm
                 existingProps={existingProps} 
                 addPropHandler={addPropHandler}
-              />
+              /> */}
             </div>
           </ScrollArea>
         </AccordionContent>
@@ -77,95 +79,31 @@ export default function ComponentDetails({
   );
 }
 
-function FormWithError({
-  formSchema,
-  submitHandler,
-  isEmptySubmission,
+function Form({
+  onSubmit,
   children
 }:{
-  formSchema: ObjectSchema<any>,
-  submitHandler: (_:BaseSyntheticEvent, __: UseFormReturn) => void,
-  isEmptySubmission: (_:BaseSyntheticEvent, __: UseFormReturn) => boolean,
-  children: (_: UseFormReturn) => React.ReactNode
+  onSubmit: (form: HTMLFormElement, event: BaseSyntheticEvent) => void,
+  children: React.ReactNode
 }) {
-  const [errors, setErrors] = useState<string[]>([])
+  const [form, setForm] = useState<HTMLFormElement | null>(null);
 
-  const rhf = useForm({
-    shouldUseNativeValidation: false,
-    mode: 'all',
-    resolver: yupResolver(formSchema),
-  });
-
-  const errorHandler = (errors: FieldErrors) => {
-    const errorMessages = Object.keys(errors).map(key => errors[key]?.message ?? "");
-    if (errorMessages) setErrors(errorMessages);
-  }
-
-  const formSubmitHandler =
+  const submitHandler = 
     (e: BaseSyntheticEvent) => {
-      console.log('formSubmitHandler');
       e.preventDefault();
-      e.stopPropagation();
-      setErrors([]);
-      rhf.handleSubmit(
-        (_ , e) => {if(e) {submitHandler(e, rhf)}},
-        errorHandler)(e)
+      if(form) onSubmit(form, e)
     }
 
   return (
-    <form method='dialog' 
-          onSubmit={formSubmitHandler}
-          noValidate
-          className='w-full'
+    <form ref={setForm}
+          method='dialog' 
+          onSubmit={submitHandler}
+          className='w-full h-full'
     >
-      {children(rhf)}
-      <dialog 
-        open={errors.length > 0} 
-        className='relative z-100 text-red-800 text-[0.5rem] rounded-lg p-2 m-1' >
-      {
-        errors.map(
-          (e, i) => 
-          <span key={`add-prop-error-${i}`} >{e}</span>
-        )
-      }
-      </dialog>
+      {children}
     </form>
   )
 }
-
-// function EditPropForm({
-//   renamePropHandler,
-//   deletePropHandler
-// }: {
-//   renamePropHandler: (newName: string) => void,
-//   deletePropHandler: (name: string) => void
-// }) {
-//   const [showInput, setShowInput] = useState(false);
-
-
-//   return <FormWithError formSchema={} submitHandler={}>
-//     {
-//     (rhf) => {
-//       return (
-//           <div className="flex items-center space-x-2 pb-1 group/props">
-//             <label>
-//               <button type='submit' className="invisible group-hover/props:visible">
-//                 <CrossCircledIcon/>
-//               </button>
-//               <input 
-//                   type={`${showInput ? 'text' : 'hidden'}`}
-//                   className={'w-full bg-foreground text-background p-1'}
-//                   autoFocus
-//                   placeholder="new prop name"
-//                   {...rhf.register('prop')}
-//               />
-//             </label>
-//           </div>
-//         )
-//       }
-//     }
-//   </FormWithError>
-// }
 
 function AddPropForm({
   existingProps,
@@ -174,96 +112,91 @@ function AddPropForm({
   existingProps: string[],
   addPropHandler: (name: string) => void
 }) {
-  const [showInput, setShowInput] = useState(false)
-  const formSchema = yup.object().shape(
-    {
-      prop: yup.string()
-        .matches(/^[a-zA-Z]+[a-zA-Z0-9_]*$/)
-        .notOneOf(existingProps)
-        .required()
-    }
+  const [form, setForm] = useState<HTMLFormElement | null>(null);
+  const [input, setInput] = useState<HTMLInputElement | null>(null);
+  const [showInput, setShowInput] = useState(false);
+
+  useEffect(() => {
+    if(showInput && input) {input.focus()}
+  }, 
+  [showInput, input]
   );
 
-  const submitHandler = (e: BaseSyntheticEvent, rhf: UseFormReturn) => {
-    console.log('child submit handler');
-    addPropHandler(rhf.getValues().prop);
-    // setShowInput(true);
-    rhf.reset();
+  function submitProp(input: HTMLInputElement, form: HTMLFormElement) {
+    if(existingProps.includes(input.value)) {
+      input.setCustomValidity(`Cannot have duplicate: '${input.value}'`);
+      input.reportValidity();
+      input.focus();
+      form?.reset();
+    }
+    else if (!input.value.match(/^[a-zA-Z]+[a-zA-Z0-9_]*$/)) { 
+      input.setCustomValidity(`Prop name is invalid identifier: '${input.value}'\n`);
+      input.reportValidity();
+      input.focus();
+      form?.reset();
+    }
+    else if (input.value) {
+      input.setCustomValidity('');
+      form?.requestSubmit();
+    }
   }
 
-  const isEmptySubmission = (e: BaseSyntheticEvent, rhf: UseFormReturn) => 
-    rhf.getValues().prop === ''
+  function onClick() {
+    if(!input) return;
+    input.focus(); 
+    if(!showInput) { setShowInput(true); }
+    else if (showInput && !input.value) { setShowInput(false); }
+    else if (form) { submitProp(input, form); }
+  }
 
-  const inputRef = useRef<HTMLInputElement>();
+  function onBlur() {
+    if(!input) return;
+
+    if(!input.value) { setShowInput(false); }
+    else if (form) { submitProp(input, form); }
+  }
+
+  const onSubmit = (e: BaseSyntheticEvent) => {
+    e.preventDefault();
+    if(!form) return;
+
+    const data = 
+      Array.from(new FormData(form).entries())
+      .reduce(
+        (accum, [key, value]) => ({...accum, [key]: value}),
+        {}
+      ) as {prop: string};
+    
+    form.reset();
+    if(showInput) setShowInput(false);
+    addPropHandler(data.prop)
+  }
+
   return (
-    <FormWithError 
-              formSchema={formSchema} 
-              submitHandler={submitHandler}
-              isEmptySubmission={isEmptySubmission}
-            >
-      {(rhf) => {
-        const rhfInput = {...rhf.register('prop')};
-        const rhfButton = {...rhf.register('propButton')};
-        return ( 
-          <div className="h-full flex items-center space-x-2 pb-1">
-            <button 
-              // type={`${showInput ? 'submit' : 'button'}`} 
-              type={'button'} 
-              // onClick={(e) => {
-              //   console.log('button clicked'); 
-              //   setShowInput(!showInput);
-              // }}
-              onClick={
-                (e) => {
-                  console.log('button e:', e);
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowInput(!showInput);
-
-                  if(!isEmptySubmission(e, rhf)) {
-                    console.log('non-empty button click')
-                    // rhf.setValue('prop', )
-                    rhfButton.onBlur(e);
-                  }
-                  else {
-                    console.log('empty button click');
-                    console.log(showInput);
-                  }
-                }
-              }
-            >
-              <PlusCircledIcon/> 
-            </button>
-            <label htmlFor="prop">
-              <input 
-                autoFocus
-                type={`${showInput ? 'text' : 'hidden'}`}
-                className={'w-full bg-foreground text-background p-1'}
-                placeholder="new prop name"
-                name={rhfInput.name}
-                onBlur={
-                  (e) => {
-                    console.log('input e:', e, rhf.getValues());
-                    const prop = e.target.value;
-                    if(prop === '') {
-                      console.log('empty input blur')
-                      setShowInput(false);
-                    }
-                    else {
-                      console.log('non-empty input blur')
-                      rhf.setValue('prop', prop)
-                      rhfInput.onBlur(e);
-                    }
-                  }
-                }
-                ref={rhfInput.ref}
-              />
-              {!showInput && <span>new prop</span>}
-            </label>
-          </div>
-        )
-      }
-    }
-    </FormWithError>
+    <form ref={setForm}
+          method='dialog' 
+          onSubmit={onSubmit}
+          className='w-full h-full'
+    >
+      <div className="h-full flex items-center space-x-2 pb-1">
+        <button 
+          type='button'
+          onClick={ onClick }
+        >
+          <PlusCircledIcon/> 
+        </button>
+        <label htmlFor="prop">
+          {!showInput ? "add new prop" : "" }
+          <input 
+            type={showInput ? 'text' : 'hidden'}
+            className={'w-full bg-foreground text-background p-1'}
+            placeholder="new prop name"
+            name={'prop'}
+            ref={setInput}
+            onBlur={onBlur}
+          />
+        </label>
+      </div>
+    </form>
   )
 }
