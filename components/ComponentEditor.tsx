@@ -7,7 +7,7 @@ import {
   Card, CardContent
 } from "@/components/ui/card"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { addProps, getProps } from "@/lib/ast";
+import { addProp, editProp, getProps, removeProp } from "@/lib/ast";
 import { access } from "fs";
 
 const initialSandpackProviderProps = (components: Components, activeComponent: string): SandpackProviderProps => 
@@ -112,10 +112,36 @@ export function ComponentEditor({
     (propName: string) => {
       const componentFileName = `/components/${activeComponent}.tsx`;
       const file = components[activeComponent][componentFileName];
-      const codeWithProp = addProps(file.code, propName);
+      const codeWithProp = addProp(file.code, propName);
       setComponents(
         (cs: Components) => {
           file.code = codeWithProp;
+          return {...cs};
+        }
+      );
+    }
+
+  const handleEditProp =
+    (oldProp: string, newProp: string) => {
+      const componentFileName = `/components/${activeComponent}.tsx`;
+      const file = components[activeComponent][componentFileName];
+      const codeWithEdittedProp = editProp(file.code, oldProp, newProp);
+      setComponents(
+        (cs: Components) => {
+          file.code = codeWithEdittedProp;
+          return {...cs};
+        }
+      );
+    }
+
+  const handleRemoveProp =
+    (prop: string) => {
+      const componentFileName = `/components/${activeComponent}.tsx`;
+      const file = components[activeComponent][componentFileName];
+      const codeWithEdittedProp = removeProp(file.code, prop);
+      setComponents(
+        (cs: Components) => {
+          file.code = codeWithEdittedProp;
           return {...cs};
         }
       );
@@ -154,8 +180,10 @@ export function ComponentEditor({
               </div>
               <div className='bg-card' style={{gridArea: 'sidebar'}}>
                 <EditorSidebar 
-                  addPropHandler={handleAddProp}
                   getPropsHandler={handleGetProps}
+                  addPropHandler={handleAddProp}
+                  editPropHandler={handleEditProp}
+                  removePropHandler={handleRemoveProp}
                 />
               </div>
 

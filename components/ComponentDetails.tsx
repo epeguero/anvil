@@ -20,13 +20,18 @@ import 'react-hook-form';
 import { FieldErrors, FieldValues, FormProvider, Resolver, SubmitHandler, UseFormReturn, useForm } from "react-hook-form";
 import { ObjectSchema } from "yup";
 import { eventNames } from "process";
+import { editProp } from "@/lib/ast";
 
 export default function ComponentDetails({
   getPropsHandler,
-  addPropHandler
+  addPropHandler,
+  editPropHandler,
+  removePropHandler
 }: {
   getPropsHandler: () => string[],
-  addPropHandler: (name: string) => void
+  addPropHandler: (name: string) => void,
+  editPropHandler: (oldProp: string, newProp :string) => void,
+  removePropHandler: (prop: string) => void,
 }) {
   const hooks = ['useState', 'useEffect'];
 
@@ -39,21 +44,19 @@ export default function ComponentDetails({
         <AccordionContent>
           <ScrollArea>
             <div className="p-4 pt-0">
-              {existingProps.map((prop, i) => (
-                <div key={`prop-${i}`}>
-                  <div className="flex items-center space-x-2 pb-1 group/props">
-                    <button className="invisible group-hover/props:visible">
-                      <CrossCircledIcon/>
-                    </button>
-                    <Label htmlFor={prop}>{prop}</Label>
-                  </div>
-                </div>
-              ))}
-              <AddPropForm existingProps={existingProps} addPropHandler={addPropHandler}/>
-              {/* <AddPropForm
+              {existingProps.map((prop, i) => 
+                <EditPropForm 
+                  key={`edit-prop-${i}`}
+                  prop={prop} 
+                  existingProps={existingProps.filter(p => p != prop)} 
+                  editPropHandler={editPropHandler}
+                  removePropHandler={removePropHandler}
+                />)
+              }
+              <AddPropForm 
                 existingProps={existingProps} 
                 addPropHandler={addPropHandler}
-              /> */}
+              />
             </div>
           </ScrollArea>
         </AccordionContent>
@@ -79,32 +82,6 @@ export default function ComponentDetails({
   );
 }
 
-function Form({
-  onSubmit,
-  children
-}:{
-  onSubmit: (form: HTMLFormElement, event: BaseSyntheticEvent) => void,
-  children: React.ReactNode
-}) {
-  const [form, setForm] = useState<HTMLFormElement | null>(null);
-
-  const submitHandler = 
-    (e: BaseSyntheticEvent) => {
-      e.preventDefault();
-      if(form) onSubmit(form, e)
-    }
-
-  return (
-    <form ref={setForm}
-          method='dialog' 
-          onSubmit={submitHandler}
-          className='w-full h-full'
-    >
-      {children}
-    </form>
-  )
-}
-
 function AddPropForm({
   existingProps,
   addPropHandler
@@ -116,77 +93,165 @@ function AddPropForm({
   const [input, setInput] = useState<HTMLInputElement | null>(null);
   const [showInput, setShowInput] = useState(false);
 
-  useEffect(() => {
-    if(showInput && input) {input.focus()}
-  }, 
-  [showInput, input]
-  );
+  useEffect(() => { if(showInput && input) {input.focus()} }, [showInput, input]);
 
-  function submitProp(input: HTMLInputElement, form: HTMLFormElement) {
-    if(existingProps.includes(input.value)) {
+  function onClick() {
+    if(!input) return;
+    console.log('click')
+    if(!showInput) { setShowInput(true); }
+  }
+
+  function onBlur() {
+    if(!input) return;
+    console.log('blur');
+    if(showInput && !input.value) {setShowInput(false);}
+    if (form) { submitProp(input, form, existingProps); }
+  }
+
+  function submitProp(input: HTMLInputElement, form: HTMLFormElement, existingProps: string[]) {
+    if(!input.value) {
+      input.setCustomValidity('');
+    }
+    else if(existingProps.includes(input.value)) {
       input.setCustomValidity(`Cannot have duplicate: '${input.value}'`);
       input.reportValidity();
-      input.focus();
       form?.reset();
     }
     else if (!input.value.match(/^[a-zA-Z]+[a-zA-Z0-9_]*$/)) { 
       input.setCustomValidity(`Prop name is invalid identifier: '${input.value}'\n`);
       input.reportValidity();
-      input.focus();
       form?.reset();
     }
-    else if (input.value) {
+    else {
       input.setCustomValidity('');
       form?.requestSubmit();
     }
   }
 
-  function onClick() {
-    if(!input) return;
-    input.focus(); 
-    if(!showInput) { setShowInput(true); }
-    else if (showInput && !input.value) { setShowInput(false); }
-    else if (form) { submitProp(input, form); }
-  }
-
-  function onBlur() {
-    if(!input) return;
-
-    if(!input.value) { setShowInput(false); }
-    else if (form) { submitProp(input, form); }
-  }
-
-  const onSubmit = (e: BaseSyntheticEvent) => {
-    e.preventDefault();
-    if(!form) return;
-
-    const data = 
-      Array.from(new FormData(form).entries())
-      .reduce(
-        (accum, [key, value]) => ({...accum, [key]: value}),
-        {}
-      ) as {prop: string};
-    
-    form.reset();
-    if(showInput) setShowInput(false);
-    addPropHandler(data.prop)
+  function onSubmitAddPropForm(e: BaseSyntheticEvent) {
+    onSubmit<{prop: string}>(e, (data) => {
+      if(showInput) setShowInput(false);
+      addPropHandler(data.prop)
+    })
   }
 
   return (
     <form ref={setForm}
           method='dialog' 
-          onSubmit={onSubmit}
-          className='w-full h-full'
+          onSubmit={onSubmitAddPropForm}
+          className='w-full h-full group/add-prop'
     >
-      <div className="h-full flex items-center space-x-2 pb-1">
+      <div className="h-full flex items-center space-x-2 pb-1" onClick={onClick} >
         <button 
+          className='opacity-30 group-hover/add-prop:opacity-100'
           type='button'
-          onClick={ onClick }
         >
           <PlusCircledIcon/> 
         </button>
         <label htmlFor="prop">
-          {!showInput ? "add new prop" : "" }
+          {!showInput ? <div className='opacity-30 group-hover/add-prop:opacity-100' >add new prop</div>: "" }
+          <input 
+            type={showInput ? 'text' : 'hidden'}
+            className={'w-full bg-foreground text-background p-1 opacity-100'}
+            placeholder="new prop name"
+            name={'prop'}
+            ref={setInput}
+            onBlur={onBlur}
+          />
+        </label>
+      </div>
+    </form>
+  )
+}
+
+
+function EditPropForm({
+  prop,
+  existingProps,
+  editPropHandler,
+  removePropHandler
+}:{
+  prop: string,
+  existingProps: string[],
+  editPropHandler: (oldProp: string, newProp: string) => void,
+  removePropHandler: (prop: string) => void
+}) {
+  const [form, setForm] = useState<HTMLFormElement | null>(null);
+  const [input, setInput] = useState<HTMLInputElement | null>(null);
+  const [showInput, setShowInput] = useState(false);
+
+  useEffect(() => { if(showInput && input) {input.focus()} }, [showInput, input]);
+
+  function onClickProp() {
+    if(!input) return;
+    console.log('click')
+    if(!showInput) { input.value = prop; setShowInput(true); }
+  }
+
+  function onClickDelete() {
+    removePropHandler(prop);
+  }
+
+  function onBlur() {
+    if(!input) return;
+    console.log('blur');
+    if(showInput && !input.value) {setShowInput(false);}
+    if (form) { submitProp(input, form, existingProps); }
+  }
+
+  function submitProp(input: HTMLInputElement, form: HTMLFormElement, existingProps: string[]) {
+    if(!input.value) {
+      input.setCustomValidity('');
+      form?.requestSubmit();
+    }
+    else if(existingProps.includes(input.value)) {
+      input.setCustomValidity(`Cannot have duplicate: '${input.value}'`);
+      input.reportValidity();
+      form?.reset();
+    }
+    else if (!input.value.match(/^[a-zA-Z]+[a-zA-Z0-9_]*$/)) { 
+      input.setCustomValidity(`Prop name is invalid identifier: '${input.value}'\n`);
+      input.reportValidity();
+      form?.reset();
+    }
+    else if (input.value != prop) {
+      input.setCustomValidity('');
+      form?.requestSubmit();
+    }
+    else {
+      setShowInput(false);
+    }
+  }
+
+  function onSubmitEditPropForm(e: BaseSyntheticEvent) {
+    onSubmit<{prop: string}>(e, (data) => {
+      console.log('submit')
+      if(showInput) setShowInput(false);
+      data.prop
+      ? editPropHandler(prop, data.prop)
+      : removePropHandler(prop)
+    })
+  }
+
+  return (
+    <form ref={setForm}
+          method='dialog' 
+          onSubmit={onSubmitEditPropForm}
+          className='w-full h-full group/edit-prop'
+    >
+      <div className="h-full flex items-center space-x-2 pb-1">
+        <button 
+          type='button'
+          onClick={onClickDelete}
+          className='opacity-0 group-hover/edit-prop:opacity-30 group-hover/edit-prop:hover:opacity-100'
+        >
+          <CrossCircledIcon/> 
+        </button>
+        <label htmlFor="prop">
+          {!showInput 
+            ? <button onClick={onClickProp} className='hover:underline'>{prop}</button>
+            : <></>
+          }
           <input 
             type={showInput ? 'text' : 'hidden'}
             className={'w-full bg-foreground text-background p-1'}
@@ -199,4 +264,21 @@ function AddPropForm({
       </div>
     </form>
   )
+}
+
+function onSubmit<T>(e: BaseSyntheticEvent, submitHandler: (data: T) => void) {
+  console.log('submit')
+  e.preventDefault();
+  const form = e.currentTarget;
+  if(!form) return;
+
+  const data = 
+    Array.from(new FormData(form).entries())
+    .reduce(
+      (accum, [key, value]) => ({...accum, [key]: value}),
+      {}
+    ) as T;
+  
+  form.reset();
+  submitHandler(data);
 }

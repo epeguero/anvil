@@ -73,22 +73,12 @@ export function tsx(name: string, children: string[] = [], externalDeps: ts.Impo
   return tsx;
 }
 
-function ast(code: string) {
-  return ts.createSourceFile(
-    'code.tsx',
-    code,
-    ts.ScriptTarget.Latest,
-    false,
-    ts.ScriptKind.TS
-  );
-}
-
 export function getProps(code: string): string[] {
   const bindings = getPropsBindingPattern(ast(code));
   return (bindings?.elements.map(e => e.name.escapedText) || [])
 }
 
-export function addProps(code: string, prop: string) {
+export function addProp(code: string, prop: string) {
   const codeAst = ast(code);
 
   const propsBindings = getPropsBindingPattern(codeAst);
@@ -108,6 +98,44 @@ export function addProps(code: string, prop: string) {
       ])
   }
   return printAst(codeAst);
+}
+
+export function editProp(code: string, oldProp: string, newProp: string) {
+  const codeAst = ast(code);
+
+  const propsBindings = getPropsBindingPattern(codeAst);
+  const oldPropElement = propsBindings.elements
+    .find(p => p.name.escapedText == oldProp) as any as ts.BindingElement;
+  oldPropElement.name.escapedText = newProp;
+
+  return printAst(codeAst);
+}
+
+export function removeProp(code: string, prop: string) {
+  const codeAst = ast(code);
+
+  const propsBindings = getPropsBindingPattern(codeAst);
+  const propBindingsMinusProp = propsBindings.elements
+    .filter(p => p.name.escapedText != prop);
+
+  getDefaultExportFunction(codeAst).parameters = 
+    ts.factory.createNodeArray(
+      propBindingsMinusProp.length > 0 
+      ? [ ts.factory.createObjectBindingPattern(propBindingsMinusProp) ]
+      : []
+    )
+    
+  return printAst(codeAst);
+}
+
+function ast(code: string) {
+  return ts.createSourceFile(
+    'code.tsx',
+    code,
+    ts.ScriptTarget.Latest,
+    false,
+    ts.ScriptKind.TS
+  );
 }
 
 function getPropsBindingPattern(ast: ts.SourceFile): ts.ObjectBindingPattern | null {

@@ -13,11 +13,15 @@ import EditorOutline from "./EditorOutline";
 import ComponentDetails from "./ComponentDetails";
 
 export default function EditorSidebar({
+  getPropsHandler,
   addPropHandler,
-  getPropsHandler
+  editPropHandler,
+  removePropHandler
 }: {
-  addPropHandler: (propName: string) => void,
   getPropsHandler: () => string[]
+  addPropHandler: (propName: string) => void,
+  editPropHandler: (oldProp: string, newProp: string) => void,
+  removePropHandler: (prop: string) => void
 }) {
   return (
     <div className='h-full flex flex-col gap-1 border p-1'>
@@ -29,22 +33,11 @@ export default function EditorSidebar({
         <ComponentDetails 
           addPropHandler={addPropHandler}
           getPropsHandler={getPropsHandler}
+          editPropHandler={editPropHandler}
+          removePropHandler={removePropHandler}
         />
       </div>
     </div>
-    // <Card className='rounded-none rounded-tr-lg'>
-    //   <CardContent className='flex flex-col p-1'>
-    //     <Card className='flex-1 rounded-sm'>
-    //       <CardTitle className='font-semibold text-base pl-2 pt-2'>Outline</CardTitle>
-    //       <Separator/>
-    //       <EditorOutline/>
-    //     </Card>
-    //     <Card className='flex-1 rounded-sm'>
-    //       <CardTitle className='font-semibold text-base pl-2 pt-2'>Details: MyComponent</CardTitle>
-    //       <ComponentDetails/>
-    //     </Card>
-    //   </CardContent>
-    // </Card>
   );
 
 }
