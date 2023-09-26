@@ -44,6 +44,10 @@ export default function ComponentDetails({
         <AccordionContent>
           <ScrollArea>
             <div className="p-4 pt-0">
+              <AddPropForm 
+                existingProps={existingProps} 
+                addPropHandler={addPropHandler}
+              />
               {existingProps.map((prop, i) => 
                 <EditPropForm 
                   key={`edit-prop-${i}`}
@@ -53,10 +57,6 @@ export default function ComponentDetails({
                   removePropHandler={removePropHandler}
                 />)
               }
-              <AddPropForm 
-                existingProps={existingProps} 
-                addPropHandler={addPropHandler}
-              />
             </div>
           </ScrollArea>
         </AccordionContent>
@@ -113,12 +113,12 @@ function AddPropForm({
       input.setCustomValidity('');
     }
     else if(existingProps.includes(input.value)) {
-      input.setCustomValidity(`Cannot have duplicate: '${input.value}'`);
+      input.setCustomValidity(`Duplicate prop: '${input.value}'.`);
       input.reportValidity();
       form?.reset();
     }
     else if (!input.value.match(/^[a-zA-Z]+[a-zA-Z0-9_]*$/)) { 
-      input.setCustomValidity(`Prop name is invalid identifier: '${input.value}'\n`);
+      input.setCustomValidity(`Prop name is invalid identifier: '${input.value}'`);
       input.reportValidity();
       form?.reset();
     }
@@ -149,7 +149,7 @@ function AddPropForm({
           <PlusCircledIcon/> 
         </button>
         <label htmlFor="prop">
-          {!showInput ? <div className='opacity-30 group-hover/add-prop:opacity-100' >add new prop</div>: "" }
+          {!showInput ? <div className='opacity-30 group-hover/add-prop:opacity-100 italic' >add new prop</div>: "" }
           <input 
             type={showInput ? 'text' : 'hidden'}
             className={'w-full bg-foreground text-background p-1 opacity-100'}
@@ -184,7 +184,6 @@ function EditPropForm({
 
   function onClickProp() {
     if(!input) return;
-    console.log('click')
     if(!showInput) { input.value = prop; setShowInput(true); }
   }
 
@@ -194,12 +193,16 @@ function EditPropForm({
 
   function onBlur() {
     if(!input) return;
-    console.log('blur');
     if(showInput && !input.value) {setShowInput(false);}
     if (form) { submitProp(input, form, existingProps); }
   }
 
+  function onChange() {
+    input?.setCustomValidity('');
+  }
+
   function submitProp(input: HTMLInputElement, form: HTMLFormElement, existingProps: string[]) {
+    console.log(input.value);
     if(!input.value) {
       input.setCustomValidity('');
       form?.requestSubmit();
@@ -225,7 +228,6 @@ function EditPropForm({
 
   function onSubmitEditPropForm(e: BaseSyntheticEvent) {
     onSubmit<{prop: string}>(e, (data) => {
-      console.log('submit')
       if(showInput) setShowInput(false);
       data.prop
       ? editPropHandler(prop, data.prop)
@@ -259,6 +261,7 @@ function EditPropForm({
             name={'prop'}
             ref={setInput}
             onBlur={onBlur}
+            onChange={onChange}
           />
         </label>
       </div>

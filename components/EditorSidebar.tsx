@@ -11,13 +11,16 @@ import { Separator } from "@/components/ui/separator"
 
 import EditorOutline from "./EditorOutline";
 import ComponentDetails from "./ComponentDetails";
+import { useSandpack } from "@codesandbox/sandpack-react/unstyled";
 
 export default function EditorSidebar({
+  activeFile,
   getPropsHandler,
   addPropHandler,
   editPropHandler,
   removePropHandler
 }: {
+  activeFile: string | undefined,
   getPropsHandler: () => string[]
   addPropHandler: (propName: string) => void,
   editPropHandler: (oldProp: string, newProp: string) => void,
@@ -30,12 +33,16 @@ export default function EditorSidebar({
         <EditorOutline/>
       </div>
       <div className='flex-[2_1_0] border px-2'>
-        <ComponentDetails 
-          addPropHandler={addPropHandler}
-          getPropsHandler={getPropsHandler}
-          editPropHandler={editPropHandler}
-          removePropHandler={removePropHandler}
-        />
+        { 
+          activeFile && ['.tsx', '.jsx'].some((ext) => activeFile.includes(ext))
+          ? <ComponentDetails 
+              addPropHandler={addPropHandler}
+              getPropsHandler={getPropsHandler}
+              editPropHandler={editPropHandler}
+              removePropHandler={removePropHandler}
+            />
+          : <></>
+        }
       </div>
     </div>
   );

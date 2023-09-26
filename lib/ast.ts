@@ -104,9 +104,16 @@ export function editProp(code: string, oldProp: string, newProp: string) {
   const codeAst = ast(code);
 
   const propsBindings = getPropsBindingPattern(codeAst);
-  const oldPropElement = propsBindings.elements
-    .find(p => p.name.escapedText == oldProp) as any as ts.BindingElement;
-  oldPropElement.name.escapedText = newProp;
+  if(propsBindings && propsBindings.elements.length > 0) {
+    console.log(propsBindings.elements);
+    const oldPropElement = propsBindings.elements
+      .find(p => p.name.text == oldProp) as any as ts.BindingElement;
+    oldPropElement.name = ts.factory.createIdentifier(newProp);
+
+  }
+  else {
+    throw new Error(`Error in 'editProp': could not rename prop '${oldProp}' to '${newProp}', as it could no be found.`)
+  }
 
   return printAst(codeAst);
 }
@@ -130,7 +137,7 @@ export function removeProp(code: string, prop: string) {
 
 function ast(code: string) {
   return ts.createSourceFile(
-    'code.tsx',
+    'ast.tsx',
     code,
     ts.ScriptTarget.Latest,
     false,
@@ -144,6 +151,7 @@ function getPropsBindingPattern(ast: ts.SourceFile): ts.ObjectBindingPattern | n
 }
 
 function getDefaultExportFunction(source: ts.SourceFile): ts.FunctionDeclaration {
+  console.log(source);
   return source.statements.find(
     s => ts.isFunctionDeclaration(s) 
     && s.modifiers

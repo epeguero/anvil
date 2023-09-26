@@ -20,7 +20,7 @@ export default function RootLayout({
       <body 
         id={'root'}
         className={inter.className + ' ' + 
-          'flex p-4 h-screen w-screen'} 
+          'flex p-2 h-screen w-screen'} 
       >
         {children}
       </body>

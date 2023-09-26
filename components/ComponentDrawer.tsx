@@ -19,6 +19,7 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
     {
       files: cFiles,
       options: {
+        initMode: 'immediate',
         externalResources: ["https://cdn.tailwindcss.com"],
         classes: {
           "sp-preview": "h-full w-full component-preview",
@@ -26,7 +27,8 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
           "sp-preview-iframe": "h-full w-full bg-foreground",
           "sp-preview-actions": "hidden",
           "sp-wrapper": "h-full",
-          "sp-layout": "h-full"
+          "sp-layout": "h-full",
+          "sp-overlay": "hidden"
         }
       },
       customSetup: {
@@ -44,46 +46,17 @@ const sandpackPreviewProviderProps = (c: Component) : SandpackProviderProps =>
   )
 }
 
-export function newComponent(name: string) {
-  return { [name]:
-    {
-      '/index.js': {code: 
-`import ReactDOM from 'react-dom/client';
-import ${name} from './components/${name}.tsx';
-ReactDOM
-.createRoot(document.getElementById('root'))
-.render(<${name}/>);
-` 
-    },
-    [`/components/${name}.tsx`]: {code: `export default function ${name}() { return ("${name}"); }`},
-    [`/package.json`] : { code: 
-      JSON.stringify(
-        {
-          entry: '/index.js',
-          dependencies: {
-            'react': 'latest',
-            'react-dom': 'latest',
-            '@radix-ui/react-slot': 'latest',
-            'class-variance-authority': 'latest',
-            'clsx': 'latest',
-            'tailwind-merge': 'latest'
-          }
-        }
-      )
-    }
-  }
-};
-}
 export default function ComponentDrawer({
   components,
-  addComponent,
+  onCreateComponent,
   onSelectComponent
 }: {
   components: Components,
-  addComponent: (component: Component) => void,
+  onCreateComponent: () => void,
   onSelectComponent: (componentName: string) => void
 }) {
   return (
+    <>
     <Sheet modal={false}>
       <SheetTrigger>
         <div className='flex w-full h-items-center gap-1 m-1 text-xs'>
@@ -97,11 +70,7 @@ export default function ComponentDrawer({
         </SheetHeader>
         <div className='flex overflow-y-auto gap-10 p-4 items-stretch '> 
           <div className='group/add shrink-0 w-44 h-44 flex bg-foreground transition-all :transition-all hover:shadow-lg hover:shadow-black/50'
-                onClick={
-                  () => {
-                    addComponent(newComponent('New'));
-                  }
-                }
+                onClick={onCreateComponent}
           >
               <PlusIcon className='m-auto h-10 w-10 text-neutral-500 group-hover/add:text-neutral-950'/>
           </div>
@@ -109,7 +78,7 @@ export default function ComponentDrawer({
             Object.entries(components).map(([cName, cFiles]) => 
               (
                 <div  className="relative group/component"
-                      onClick={() => onSelectComponent(cName)}
+                      onClick={() => {onSelectComponent(cName)}}
                       key={`component-${cName}`} 
                 >
                 <div  className="z-10 absolute shrink-0 w-44 h-44 border bg-neutral-100 opacity-10 group-hover/component:shadow-lg group-hover/component:shadow-black/50 transition-all"/>
@@ -134,5 +103,6 @@ export default function ComponentDrawer({
         </div>
       </SheetContent>
     </Sheet>
+  </>
   )
 }
